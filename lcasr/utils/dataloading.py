@@ -164,7 +164,7 @@ def load_sample(entry:Dict[str, str]) -> Tuple[torch.Tensor, torch.Tensor]:
     # )
     # audio = torch.as_tensor(spec, dtype=torch.float32)
     # audio = processing_chain(audio_name)
-    audio = torch.load(entry['audio'])
+    audio = torch.load(entry['audio'], weights_only=False)
     txt = load_json(entry['txt'])
     return audio, txt
 
@@ -196,7 +196,7 @@ class Utterance_Dataset(torch.utils.data.Dataset):
         return len(self.files)
     
     def __getitem__(self, idx):
-        data = torch.load(self.files[idx])
+        data = torch.load(self.files[idx], weights_only=False)
         return data['id'], data['audio'], data['txt'], data['txt_lengths'], data['audio_lengths']
     
     @staticmethod
@@ -273,7 +273,7 @@ class MaskedUtterance_Dataset(Utterance_Dataset):
         return result
     
     def __getitem__(self, idx):
-        data = torch.load(self.files[idx])
+        data = torch.load(self.files[idx], weights_only=False)
 
         txt = data['txt']
         txt_list = txt[0].tolist()
