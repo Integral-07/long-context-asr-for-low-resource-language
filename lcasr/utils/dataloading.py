@@ -423,10 +423,12 @@ class SimpleDataset(torch.utils.data.Dataset):
 
     @staticmethod
     def resolve_txt(txt:Dict[str, Any]):
+        if isinstance(txt, list):
+            return txt  # plain word list: [{"start", "end", "text"}]
         if 'word_timestamps' in txt: # floras 50 format prepared via: https://github.com/robflynnyh/align_floras50/tree/main
             return txt['word_timestamps']
         else:
-            return txt['results'][-1]['alternatives'][0]['words'] # spotify format prepared by spotify 
+            return txt['results'][-1]['alternatives'][0]['words'] # spotify format prepared by spotify
 
     def __getitem__(self, idx):
         audio, txt = load_sample({'audio': self.pairs['audio'][idx], 'txt': self.pairs['txt'][idx]})
