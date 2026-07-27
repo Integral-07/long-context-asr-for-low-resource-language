@@ -45,26 +45,28 @@ from tqdm import tqdm
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
-def check_ffmpeg():
+def load_audio(path: Path) -> torch.Tensor:
+    """Load audio as mono 16kHz waveform. Tries torchaudio first, then librosa."""
+    import torchaudio
     try:
-        subprocess.run(['ffmpeg', '-version'], capture_output=True, check=True)
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        print('ERROR: ffmpeg not found. Install with: sudo apt install ffmpeg', file=sys.stderr)
-        sys.exit(1)
+        waveform, sr = torchaudio.load(str(path))
+        if waveform.shape[0] > 1:
+            waveform = waveform.mean(0, keepdim=True)
+        if sr != 16000:
+            waveform = torchaudio.transforms.Resample(sr, 16000)(waveform)
+        return waveform
+    except Exception:
+        import librosa
+        import numpy as np
+        wav, _ = librosa.load(str(path), sr=16000, mono=True)
+        return torch.from_numpy(wav).unsqueeze(0)
 
 
-def sph_to_wav(sph_path: Path, wav_path: Path):
-    subprocess.run(
-        ['ffmpeg', '-y', '-loglevel', 'error',
-         '-i', str(sph_path), '-ar', '16000', '-ac', '1', str(wav_path)],
-        check=True,
-    )
-
-
-def make_spectrogram(wav_path: Path, spec_path: Path) -> int:
+def make_spectrogram(audio_path: Path, spec_path: Path) -> int:
     """Return number of mel frames."""
-    from lcasr.utils.audio_tools import processing_chain
-    spec = processing_chain(str(wav_path)).to(torch.float16)
+    from lcasr.utils.audio_tools import to_spectogram
+    waveform = load_audio(audio_path)
+    spec = to_spectogram(waveform).to(torch.float16)
     torch.save(spec, str(spec_path))
     return spec.shape[-1]
 
@@ -113,8 +115,6 @@ def main():
     parser.add_argument('--skip-audio', action='store_true',
                         help='Skip spectrogram generation (reuse existing .spec.pt)')
     args = parser.parse_args()
-
-    check_ffmpeg()
 
     tedlium_dir = Path(args.tedlium_dir)
     spec_dir = Path(args.spec_dir)
@@ -166,15 +166,10 @@ def main():
         if args.skip_audio or spec_path.exists():
             continue
 
-        wav_path = spec_dir / f'{rec_id}_tmp.wav'
         try:
-            sph_to_wav(sph_path, wav_path)
-            make_spectrogram(wav_path, spec_path)
+            make_spectrogram(sph_path, spec_path)
         except Exception as e:
             errors.append((rec_id, str(e)))
-        finally:
-            if wav_path.exists():
-                wav_path.unlink()
 
     if errors:
         print(f'  WARN: {len(errors)} recordings failed:')
