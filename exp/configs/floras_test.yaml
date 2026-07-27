@@ -48,11 +48,11 @@ wandb:
   project_name: spotify_long_context
   name: test
   id: ""
-  dir: /mnt/parscratch/users/acp21rjf/wandb_log/
+  dir: /home/t23cs033/wandb_log/
   update_config_with_wandb_id: false
 
 checkpointing:
-  dir: /mnt/parscratch/users/acp21rjf/tmp/
+  dir: /home/t23cs033/checkpoints/
   save_every_n_steps: 200000
 
 data:
