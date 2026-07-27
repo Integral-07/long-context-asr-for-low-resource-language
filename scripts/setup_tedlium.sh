@@ -73,11 +73,24 @@ echo ""
 echo "=== [4/4] Updating config and starting training ==="
 uv run --extra gpu python3 - <<EOF
 import re
+
 with open("$CONFIG", "r") as f:
-    content = f.read()
-content = re.sub(r'path:.*', 'path: $MAPPING_JSON', content)
+    lines = f.readlines()
+
+in_data = False
+for i, line in enumerate(lines):
+    stripped = line.strip()
+    if stripped == "data:":
+        in_data = True
+    elif in_data:
+        if stripped and not stripped.startswith("#") and not line[0].isspace():
+            in_data = False
+        elif re.match(r"\s+path\s*:", line):
+            lines[i] = re.sub(r"(path\s*:).*", r"\1 $MAPPING_JSON", line)
+            in_data = False
+
 with open("$CONFIG", "w") as f:
-    f.write(content)
+    f.writelines(lines)
 print("Config updated: data.path ->", "$MAPPING_JSON")
 EOF
 
