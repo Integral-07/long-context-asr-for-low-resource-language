@@ -118,7 +118,7 @@ def train(
     ctc_loss_fn = torch.nn.CTCLoss(
         blank=model.decoder.num_classes-1,
         reduction='sum',
-        zero_infinity=args.config['training'].get('ctc_zero_infinity', False),
+        zero_infinity=args.config['training'].get('ctc_zero_infinity', True),
     )
 
     backprop_every, backwards_every = args.config['training']['backprop_every'], args.config['training'].get('backwards_every', 1)
@@ -176,6 +176,8 @@ def train(
             pad_id=pad_id,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
+            subsampling_factor=args.config['model'].get('subsampling_factor', 8),
+            ctc_len_margin=args.config['training'].get('ctc_len_margin', 1),
         )
         seen_ids.extend(ids)
 

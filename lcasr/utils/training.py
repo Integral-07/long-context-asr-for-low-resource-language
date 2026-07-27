@@ -89,7 +89,22 @@ def refresh_dataloader_for_epoch(args, dataloader, tokenizer, batch_size: int, s
     raise AttributeError(f'{type(dataloader).__name__} has no update() method')
 
 
-def batch_to_chunks(batch, tokenizer, pad_id: int, chunk_size: int, chunk_overlap: int):
+def _ctc_min_len(token_ids: torch.Tensor, length: int) -> int:
+    """Minimum CTC output frames = label length + adjacent-repeat count."""
+    ids = token_ids[:length].tolist()
+    repeats = sum(1 for a, b in zip(ids, ids[1:]) if a == b)
+    return length + repeats
+
+
+def batch_to_chunks(
+    batch,
+    tokenizer,
+    pad_id: int,
+    chunk_size: int,
+    chunk_overlap: int,
+    subsampling_factor: int = 8,
+    ctc_len_margin: int = 1,
+):
     if isinstance(batch, dict):
         audio = batch['audio']
         audio_lengths = batch['audio_lengths']
@@ -134,6 +149,27 @@ def batch_to_chunks(batch, tokenizer, pad_id: int, chunk_size: int, chunk_overla
             if remove_mask[i]
         ]
         enc_txt_chunks_lengths = torch.LongTensor([el.shape[0] for el in enc_txt_chunks])
+
+        # CTC feasibility filter (Ainu notebook の ctc_is_feasible と同じ考え方)
+        # T_out = cur_lengths // subsampling_factor が label の最小必要長を下回るチャンクを除去
+        t_out = cur_lengths // subsampling_factor
+        ctc_min_lens = torch.LongTensor([
+            _ctc_min_len(tokens, length.item())
+            for tokens, length in zip(enc_txt_chunks, enc_txt_chunks_lengths)
+        ])
+        feasible = t_out >= ctc_min_lens + ctc_len_margin
+        if not feasible.all():
+            n_inf = (~feasible).sum().item()
+            print(f'[CTC filter] chunk {ix}: dropping {n_inf}/{len(feasible)} infeasible sample(s) '
+                  f'(T_out={t_out[~feasible].tolist()} < min_len={ctc_min_lens[~feasible].tolist()})')
+            enc_txt_chunks = [t for t, f in zip(enc_txt_chunks, feasible.tolist()) if f]
+            enc_txt_chunks_lengths = enc_txt_chunks_lengths[feasible]
+            cur_lengths = cur_lengths[feasible]
+            cur_chunks = cur_chunks[feasible]
+            cur_culm_lengths = cur_culm_lengths[feasible]
+
+        if len(enc_txt_chunks) == 0:
+            continue
         enc_txt_chunks = torch.nn.utils.rnn.pad_sequence(
             enc_txt_chunks,
             batch_first=True,
