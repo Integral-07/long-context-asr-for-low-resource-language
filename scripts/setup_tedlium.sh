@@ -32,8 +32,25 @@ echo "=== [2/4] Downloading TED-LIUM 3 (~14GB) ==="
 if [ -d "$TEDLIUM_DIR" ]; then
     echo "Already exists, skipping."
 else
-    wget -c -O "$TEDLIUM_TGZ" \
+    # 複数ミラーを順に試す
+    TEDLIUM_URLS=(
+        "https://projets-lium.univ-lemans.fr/wp-content/uploads/corpus/TED-LIUM/TEDLIUM_release-3.tgz"
         "https://www.openslr.org/resources/51/TEDLIUM_release-3.tgz"
+    )
+    DOWNLOADED=false
+    for URL in "${TEDLIUM_URLS[@]}"; do
+        echo "Trying: $URL"
+        if wget -c -O "$TEDLIUM_TGZ" "$URL"; then
+            DOWNLOADED=true
+            break
+        fi
+        echo "Failed, trying next mirror..."
+    done
+    if [ "$DOWNLOADED" = false ]; then
+        echo "ERROR: すべてのミラーからのダウンロードに失敗しました。"
+        echo "手動でダウンロードして $TEDLIUM_TGZ に配置してください。"
+        exit 1
+    fi
     echo "Extracting..."
     tar -xzf "$TEDLIUM_TGZ" -C "$HOME_DIR"
     echo "Extraction done."
