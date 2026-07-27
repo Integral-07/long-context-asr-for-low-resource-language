@@ -1,0 +1,4 @@
+earnings22:
+  test: /home/t23cs033/long-context-asr/speech-datasets/earnings22/media
+  dev: /home/t23cs033/long-context-asr/speech-datasets/earnings22/media
+  text: /home/t23cs033/long-context-asr/data/earnings22/full_transcripts.json
