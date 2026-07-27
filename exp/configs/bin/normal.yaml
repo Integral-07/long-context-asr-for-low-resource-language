@@ -1,0 +1,65 @@
+model_class: 'SCConformerXL'
+
+model:
+  feat_in: 80
+  n_layers: 6
+  d_model: 768
+  n_heads: 6
+  head_dim: 128
+  dropout_ff: 0.0 # dropout parameters
+  dropout_attn: 0.0
+  dropout_conv: 0.0
+  subsampling_factor: 8 # subsampling parameters
+  subsampling: 'dw_striding'
+  subsampling_act: 'silu'
+  subsampling_conv_channels: -1
+  self_condition_subsampling: false
+  subsampling_norm_out: false
+  conv_kernel_size: 9
+  qk_rms_norm: false 
+  shift_kvs: false
+  self_conditioning: true
+  gated_sc: false
+  decoder_norm: true
+  use_rotary: true
+  transformer: false
+  default_norm: 'layer_norm'
+  sandwich_norm: false
+  bias_in_ff: false
+  checkpoint_every_n_layers: 0
+  flash_attn: true
+  rotary_base_freq: 1500000
+
+
+optimizer:
+  name: madgrad
+  args:
+    lr: 9e-4
+
+scheduler:
+  warmup_steps: 3000
+
+training:
+  start_spec_augment_after_n_epochs: -1 # -1 to disable
+  max_epochs: 1
+  batch_size: 88
+  backprop_every: 1
+  backwards_every: 1
+  max_seq_len: 0
+  clip_value: 0.8
+  intermediate_loss_weighting: 0.0
+  random_seed: 123456
+  dtype: bfloat16
+
+
+# size: 512 = batch size  
+# size: 1024 = batch size 352
+# size: 2048 = batch size 176
+# size: 4096 = batch size 88
+# size: 8192 = batch size 44
+# size: 16384 = batch size 22
+# size: 32768 = batch size 11
+# size: 65536 = batch size 5 
+# size: 131072 = batch size 2
+# size: 262144 = batch size 1
+# size: 360000 (1 hour) =  batch size 1

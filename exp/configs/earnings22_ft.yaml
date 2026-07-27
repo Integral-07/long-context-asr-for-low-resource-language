@@ -1,0 +1,56 @@
+model_class: 'EncDecSconformerV2'
+
+model:
+  feat_in: 80
+  n_layers: 3
+  d_model: 768
+  ctc_loss_weight: 0.7
+  acoustic_norm: false
+  flash_attn: true
+
+optimizer:
+  name: madgrad
+  args:
+    lr: 1e-4
+
+scheduler:
+  warmup_steps: 100
+
+audio_chunking:
+  size: 2048
+  overlap: 0
+
+sequence_scheduler:
+  increase_every: 999999
+  stop_after: 0
+  start_after: 0
+  max_sequence_length: 2048
+  increase_by_multiplier: 2
+  batch_size_multiplier: 1.0
+
+wandb:
+  use: false
+  project_name: earnings22_enc_dec
+  name: earnings22_ft_smoke
+  update_config_with_wandb_id: false
+  id: ''
+
+checkpointing:
+  dir: /home/t23cs033/long-context-asr/data/earnings22/checkpoints
+  pretrained: /home/t23cs033/long-context-asr/checkpoints/pretrained/n_seq_sched_1024_rp_1/step_105360.pt
+  save_every_n_steps: 1000
+
+data:
+  path: /home/t23cs033/long-context-asr/data/earnings22/manifest.json
+
+training:
+  start_spec_augment_after_n_epochs: -1
+  max_epochs: 12
+  batch_size: 22
+  backprop_every: 4
+  backwards_every: 1
+  max_seq_len: 0
+  clip_value: 0.8
+  intermediate_loss_weighting: 0.0
+  random_seed: 552268
+  dtype: bfloat16

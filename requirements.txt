@@ -1,0 +1,6 @@
+tqdm
+torch
+torchaudio
+numpy
+einops
+omegaconf

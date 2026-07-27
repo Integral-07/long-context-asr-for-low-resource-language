@@ -1,0 +1,78 @@
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+name = "long-context-asr"
+version = "1.0"
+authors = [
+]
+description = "Code for training long-context ASR models"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+]
+dependencies = [
+    "tqdm",
+    "numpy==1.26.4",
+    "einops==0.6.1",
+    "einops-exts==0.0.4",
+    "omegaconf",
+    "setuptools>=82.0.1",
+    "requests>=2.34.2",
+    "sentencepiece",
+    "librosa",
+    "pandas",
+    "matplotlib",
+    "wandb",
+    "huggingface_hub",
+    "pyctcdecode",
+    "jiwer>=3.0",
+    "openai-whisper",
+]
+
+[project.optional-dependencies]
+# CPU と GPU は排他的。どちらか一方を指定する。
+# uv sync --extra cpu   または   uv sync --extra gpu
+cpu = [
+    "torch==2.4.0",
+    "torchvision==0.19.0",
+    "torchaudio"
+]
+gpu = [
+    "torch>=2.4.0",
+    "torchvision>=0.19.0",
+    "torchaudio",
+]
+
+[tool.uv]
+conflicts = [
+    [{ extra = "cpu" }, { extra = "gpu" }],
+]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu124", extra = "gpu" },
+]
+torchvision = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu124", extra = "gpu" },
+]
+torchaudio = [                                                                                                                    
+    { index = "pytorch-cpu", extra = "cpu" },                                                                                     
+    { index = "pytorch-cu124", extra = "gpu" },                                                                                   
+]  
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true

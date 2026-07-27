@@ -1,0 +1,622 @@
+{
+  "2020-03-0230487MTN-Ghana-2019-Annual-Results-Call": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/2020-03-0230487MTN-Ghana-2019-Annual-Results-Call.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/2020-03-0230487MTN-Ghana-2019-Annual-Results-Call.txt.json",
+    "duration": 3057.2
+  },
+  "2020-Annual-Results-Call-Recording": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/2020-Annual-Results-Call-Recording.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/2020-Annual-Results-Call-Recording.txt.json",
+    "duration": 4385.85
+  },
+  "4329526": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4329526.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4329526.txt.json",
+    "duration": 2103.29
+  },
+  "4351517": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4351517.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4351517.txt.json",
+    "duration": 3293.24
+  },
+  "4372696": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4372696.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4372696.txt.json",
+    "duration": 3649.11
+  },
+  "4420696": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4420696.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4420696.txt.json",
+    "duration": 3556.13
+  },
+  "4423872": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4423872.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4423872.txt.json",
+    "duration": 3281.48
+  },
+  "4426736": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4426736.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4426736.txt.json",
+    "duration": 2736.88
+  },
+  "4430051": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4430051.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4430051.txt.json",
+    "duration": 3771.51
+  },
+  "4432298": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4432298.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4432298.txt.json",
+    "duration": 2643.85
+  },
+  "4443871": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4443871.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4443871.txt.json",
+    "duration": 2644.23
+  },
+  "4443920": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4443920.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4443920.txt.json",
+    "duration": 3407.29
+  },
+  "4446796": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4446796.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4446796.txt.json",
+    "duration": 1682.0
+  },
+  "4448760": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4448760.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4448760.txt.json",
+    "duration": 3660.17
+  },
+  "4449269": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4449269.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4449269.txt.json",
+    "duration": 2655.98
+  },
+  "4450488": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4450488.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4450488.txt.json",
+    "duration": 4341.61
+  },
+  "4450779": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4450779.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4450779.txt.json",
+    "duration": 2168.43
+  },
+  "4452058": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4452058.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4452058.txt.json",
+    "duration": 3152.2
+  },
+  "4453076": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4453076.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4453076.txt.json",
+    "duration": 3271.15
+  },
+  "4453085": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4453085.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4453085.txt.json",
+    "duration": 3586.06
+  },
+  "4453225": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4453225.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4453225.txt.json",
+    "duration": 4307.48
+  },
+  "4461799": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4461799.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4461799.txt.json",
+    "duration": 4586.09
+  },
+  "4462231": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4462231.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4462231.txt.json",
+    "duration": 2480.45
+  },
+  "4463259": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4463259.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4463259.txt.json",
+    "duration": 4492.88
+  },
+  "4463693": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4463693.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4463693.txt.json",
+    "duration": 4125.39
+  },
+  "4464164": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4464164.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4464164.txt.json",
+    "duration": 2880.19
+  },
+  "4466251": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4466251.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4466251.txt.json",
+    "duration": 2682.83
+  },
+  "4466399": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4466399.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4466399.txt.json",
+    "duration": 3004.64
+  },
+  "4466607": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4466607.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4466607.txt.json",
+    "duration": 5180.17
+  },
+  "4466718": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4466718.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4466718.txt.json",
+    "duration": 5176.16
+  },
+  "4466797": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4466797.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4466797.txt.json",
+    "duration": 5610.13
+  },
+  "4467071": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4467071.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4467071.txt.json",
+    "duration": 2680.09
+  },
+  "4467079": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4467079.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4467079.txt.json",
+    "duration": 4495.1
+  },
+  "4467434": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4467434.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4467434.txt.json",
+    "duration": 2893.12
+  },
+  "4467717": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4467717.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4467717.txt.json",
+    "duration": 3793.3
+  },
+  "4468000": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468000.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468000.txt.json",
+    "duration": 3692.81
+  },
+  "4468307": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468307.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468307.txt.json",
+    "duration": 4318.01
+  },
+  "4468639": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468639.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468639.txt.json",
+    "duration": 2569.33
+  },
+  "4468647": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468647.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468647.txt.json",
+    "duration": 2748.61
+  },
+  "4468654": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468654.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468654.txt.json",
+    "duration": 4277.14
+  },
+  "4468678": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468678.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468678.txt.json",
+    "duration": 5492.56
+  },
+  "4468679": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468679.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468679.txt.json",
+    "duration": 3300.34
+  },
+  "4468715": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468715.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468715.txt.json",
+    "duration": 6269.39
+  },
+  "4468919": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468919.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4468919.txt.json",
+    "duration": 1214.49
+  },
+  "4469075": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469075.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469075.txt.json",
+    "duration": 1621.45
+  },
+  "4469088": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469088.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469088.txt.json",
+    "duration": 4634.13
+  },
+  "4469184": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469184.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469184.txt.json",
+    "duration": 3552.13
+  },
+  "4469208": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469208.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469208.txt.json",
+    "duration": 3099.07
+  },
+  "4469291": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469291.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469291.txt.json",
+    "duration": 2023.08
+  },
+  "4469528": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469528.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469528.txt.json",
+    "duration": 1671.51
+  },
+  "4469590": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469590.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469590.txt.json",
+    "duration": 2702.96
+  },
+  "4469669": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469669.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469669.txt.json",
+    "duration": 7407.05
+  },
+  "4469836": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469836.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4469836.txt.json",
+    "duration": 3738.68
+  },
+  "4470010": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470010.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470010.txt.json",
+    "duration": 1742.95
+  },
+  "4470253": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470253.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470253.txt.json",
+    "duration": 3819.82
+  },
+  "4470290": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470290.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470290.txt.json",
+    "duration": 1626.99
+  },
+  "4470570": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470570.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470570.txt.json",
+    "duration": 2048.5
+  },
+  "4470595": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470595.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470595.txt.json",
+    "duration": 3961.59
+  },
+  "4470663": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470663.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470663.txt.json",
+    "duration": 3543.02
+  },
+  "4470684": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470684.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4470684.txt.json",
+    "duration": 4696.3
+  },
+  "4471586": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4471586.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4471586.txt.json",
+    "duration": 1259.65
+  },
+  "4471606": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4471606.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4471606.txt.json",
+    "duration": 3768.99
+  },
+  "4471809": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4471809.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4471809.txt.json",
+    "duration": 2189.72
+  },
+  "4471961": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4471961.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4471961.txt.json",
+    "duration": 1694.99
+  },
+  "4472403": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4472403.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4472403.txt.json",
+    "duration": 3545.65
+  },
+  "4472895": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4472895.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4472895.txt.json",
+    "duration": 1490.12
+  },
+  "4473238": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4473238.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4473238.txt.json",
+    "duration": 2429.72
+  },
+  "4473837": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4473837.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4473837.txt.json",
+    "duration": 2855.18
+  },
+  "4474229": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4474229.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4474229.txt.json",
+    "duration": 3082.83
+  },
+  "4474327": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4474327.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4474327.txt.json",
+    "duration": 2939.53
+  },
+  "4474506": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4474506.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4474506.txt.json",
+    "duration": 3975.94
+  },
+  "4474955": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4474955.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4474955.txt.json",
+    "duration": 874.73
+  },
+  "4475486": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4475486.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4475486.txt.json",
+    "duration": 2541.75
+  },
+  "4475604": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4475604.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4475604.txt.json",
+    "duration": 1244.65
+  },
+  "4479524": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4479524.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4479524.txt.json",
+    "duration": 1225.93
+  },
+  "4479741": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4479741.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4479741.txt.json",
+    "duration": 3665.07
+  },
+  "4479944": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4479944.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4479944.txt.json",
+    "duration": 3892.54
+  },
+  "4480850": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4480850.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4480850.txt.json",
+    "duration": 2678.0
+  },
+  "4481221": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481221.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481221.txt.json",
+    "duration": 1236.58
+  },
+  "4481552": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481552.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481552.txt.json",
+    "duration": 3839.91
+  },
+  "4481601": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481601.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481601.txt.json",
+    "duration": 2515.78
+  },
+  "4481766": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481766.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481766.txt.json",
+    "duration": 4824.93
+  },
+  "4481904": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481904.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481904.txt.json",
+    "duration": 3668.14
+  },
+  "4481952": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481952.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481952.txt.json",
+    "duration": 3709.57
+  },
+  "4481967": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481967.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4481967.txt.json",
+    "duration": 6246.64
+  },
+  "4482110": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482110.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482110.txt.json",
+    "duration": 2106.99
+  },
+  "4482249": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482249.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482249.txt.json",
+    "duration": 5226.19
+  },
+  "4482264": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482264.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482264.txt.json",
+    "duration": 4895.5
+  },
+  "4482311": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482311.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482311.txt.json",
+    "duration": 5243.0
+  },
+  "4482383": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482383.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482383.txt.json",
+    "duration": 3472.21
+  },
+  "4482569": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482569.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482569.txt.json",
+    "duration": 3482.62
+  },
+  "4482609": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482609.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482609.txt.json",
+    "duration": 5489.43
+  },
+  "4482613": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482613.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482613.txt.json",
+    "duration": 4022.0
+  },
+  "4482641": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482641.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482641.txt.json",
+    "duration": 3172.33
+  },
+  "4482682": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482682.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482682.txt.json",
+    "duration": 4759.54
+  },
+  "4482968": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482968.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482968.txt.json",
+    "duration": 1343.92
+  },
+  "4482976": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482976.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482976.txt.json",
+    "duration": 2598.16
+  },
+  "4482983": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482983.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4482983.txt.json",
+    "duration": 3829.15
+  },
+  "4483046": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483046.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483046.txt.json",
+    "duration": 1193.02
+  },
+  "4483296": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483296.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483296.txt.json",
+    "duration": 4281.25
+  },
+  "4483297": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483297.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483297.txt.json",
+    "duration": 3699.94
+  },
+  "4483320": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483320.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483320.txt.json",
+    "duration": 4428.84
+  },
+  "4483338": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483338.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483338.txt.json",
+    "duration": 4159.9
+  },
+  "4483506": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483506.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483506.txt.json",
+    "duration": 4537.45
+  },
+  "4483589": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483589.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483589.txt.json",
+    "duration": 4979.14
+  },
+  "4483623": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483623.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483623.txt.json",
+    "duration": 1686.41
+  },
+  "4483633": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483633.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483633.txt.json",
+    "duration": 3597.49
+  },
+  "4483668": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483668.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483668.txt.json",
+    "duration": 2796.0
+  },
+  "4483670": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483670.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483670.txt.json",
+    "duration": 2242.64
+  },
+  "4483678": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483678.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483678.txt.json",
+    "duration": 3398.0
+  },
+  "4483680": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483680.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483680.txt.json",
+    "duration": 4034.33
+  },
+  "4483733": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483733.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483733.txt.json",
+    "duration": 6280.5
+  },
+  "4483857": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483857.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483857.txt.json",
+    "duration": 4292.14
+  },
+  "4483912": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483912.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483912.txt.json",
+    "duration": 4033.09
+  },
+  "4483937": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483937.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4483937.txt.json",
+    "duration": 3653.53
+  },
+  "4484088": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4484088.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4484088.txt.json",
+    "duration": 6396.29
+  },
+  "4484146": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4484146.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4484146.txt.json",
+    "duration": 4153.49
+  },
+  "4484942": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4484942.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4484942.txt.json",
+    "duration": 3192.13
+  },
+  "4485192": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4485192.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4485192.txt.json",
+    "duration": 3692.26
+  },
+  "4485206": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4485206.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4485206.txt.json",
+    "duration": 2841.95
+  },
+  "4485244": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/4485244.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/4485244.txt.json",
+    "duration": 3688.61
+  },
+  "MP3-A": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/MP3-A.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/MP3-A.txt.json",
+    "duration": 3783.56
+  },
+  "MTN-Ghana-2021-Third-Quarter-Results-Call": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/MTN-Ghana-2021-Third-Quarter-Results-Call.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/MTN-Ghana-2021-Third-Quarter-Results-Call.txt.json",
+    "duration": 3900.1
+  },
+  "mtngh_fy18_call_audio_04032019": {
+    "audio": "/home/t23cs033/long-context-asr/data/earnings22/specs/mtngh_fy18_call_audio_04032019.spec.pt",
+    "txt": "/home/t23cs033/long-context-asr/data/earnings22/specs/mtngh_fy18_call_audio_04032019.txt.json",
+    "duration": 3076.96
+  }
+}
