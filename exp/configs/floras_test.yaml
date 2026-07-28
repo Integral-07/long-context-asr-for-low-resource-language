@@ -66,9 +66,9 @@ training:
   backwards_every: 1
   max_seq_len: 0
   clip_value: 0.8
-  intermediate_loss_weighting: 0.0
+  intermediate_loss_weighting: 0.5
   random_seed: 6433
-  max_epochs: 50
+  max_epochs: 20
 
 sequence_scheduler:
   increase_every: 5000
