@@ -255,8 +255,15 @@ def train(
                         last_kv_set = out_kvs[:, -max_cache_length:].clone()
                     
                     cur_probs = out['final_posteriors']
-                    B,N,C = cur_probs.shape 
+                    B,N,C = cur_probs.shape
                     loss = ctc_loss_fn(cur_probs.transpose(0,1), txt, out['length'], t_lengths).sum()
+
+                    inter_weight = args.config['training'].get('intermediate_loss_weighting', 0.0)
+                    if inter_weight > 0.0:
+                        for inter_post in out.get('interim_posteriors', []):
+                            inter_loss = ctc_loss_fn(inter_post.transpose(0,1), txt, out['length'], t_lengths).sum()
+                            if torch.isfinite(inter_loss):
+                                loss = loss + inter_weight * inter_loss
                     
                 blank_prob = blank_p(cur_probs.detach(), dataloader.tokenizer)
                 # check for non-finite loss before it can corrupt trainable weights
