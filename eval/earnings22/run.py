@@ -34,11 +34,16 @@ def fetch_data(audio_path:str = TEST_PATH, txt_path:str = ALL_TEXT_PATH):
         'path': os.path.join(audio_path, el)
         } for el in os.listdir(audio_path) if el.endswith('.mp3')]
 
+    missing = [el['meeting'] for el in audio_files if el['meeting'] not in all_text_json]
+    if missing:
+        print(f'[fetch_data] skipping {len(missing)} audio file(s) with no transcript: {missing}')
+    audio_files = [el for el in audio_files if el['meeting'] in all_text_json]
+
     text_files = [{
         'meeting': el['meeting'],
         'text': all_text_json[el['meeting']]
         } for el in audio_files]
- 
+
     return audio_files, text_files
 
 

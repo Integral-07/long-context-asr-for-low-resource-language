@@ -218,11 +218,12 @@ class SCConformerXL(BaseModel):
     
         audio_signal = self.fourier_pos_enc(audio_signal)
         
+        interim_posteriors = []
         for lth, layer in enumerate(self.layers):
 
             if self.checkpoint_every_n_layers > 0 and lth % self.checkpoint_every_n_layers == 0:
                 audio_signal = checkpoint(
-                    self.create_custom_forward(layer), 
+                    self.create_custom_forward(layer),
                     audio_signal, # x
                     att_mask, # att_mask
                     length,
@@ -232,24 +233,25 @@ class SCConformerXL(BaseModel):
                 )
             else:
                 audio_signal = layer(
-                    x = audio_signal, 
-                    attn_mask = att_mask, 
+                    x = audio_signal,
+                    attn_mask = att_mask,
                     length = length,
                     pad_mask = pad_mask,
                     flash_attn = self.flash_attn,
                     rotary_emb_fn = rotary_emb_fn
                 )
-            
+
             if lth != len(self.layers) - 1 and self.self_conditioning:
                 iterim_post = torch.nn.functional.softmax(decoder(x=audio_signal, logits=True), dim=-1)
-                audio_signal = decoder.integrate_projections(audio_signal, decoder.project_back(iterim_post))        
+                interim_posteriors.append(iterim_post)
+                audio_signal = decoder.integrate_projections(audio_signal, decoder.project_back(iterim_post))
 
         if skip_vocab_projection:
             output_dict = {'hidden_states': audio_signal, 'length': length,}
         else:
             audio_signal = decoder.norm(audio_signal) if self.legasee_double_norm else audio_signal
-            final_posts = decoder(x = audio_signal, logits = return_logits) 
-            output_dict = {'final_posteriors': final_posts, 'length': length,}
+            final_posts = decoder(x = audio_signal, logits = return_logits)
+            output_dict = {'final_posteriors': final_posts, 'length': length, 'interim_posteriors': interim_posteriors}
 
         if self.training and self.rotary_pos_emb is not None:
             self.rotary_pos_emb.reset_if_needed()

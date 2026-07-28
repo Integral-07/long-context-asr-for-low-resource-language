@@ -118,7 +118,7 @@ def train(
     ctc_loss_fn = torch.nn.CTCLoss(
         blank=model.decoder.num_classes-1,
         reduction='sum',
-        zero_infinity=args.config['training'].get('ctc_zero_infinity', False),
+        zero_infinity=args.config['training'].get('ctc_zero_infinity', True),
     )
 
     backprop_every, backwards_every = args.config['training']['backprop_every'], args.config['training'].get('backwards_every', 1)
@@ -176,6 +176,8 @@ def train(
             pad_id=pad_id,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
+            subsampling_factor=args.config['model'].get('subsampling_factor', 8),
+            ctc_len_margin=args.config['training'].get('ctc_len_margin', 1),
         )
         seen_ids.extend(ids)
 
@@ -253,8 +255,16 @@ def train(
                         last_kv_set = out_kvs[:, -max_cache_length:].clone()
                     
                     cur_probs = out['final_posteriors']
-                    B,N,C = cur_probs.shape 
+                    B,N,C = cur_probs.shape
                     loss = ctc_loss_fn(cur_probs.transpose(0,1), txt, out['length'], t_lengths).sum()
+
+                    inter_weight = args.config['training'].get('intermediate_loss_weighting', 0.0)
+                    if inter_weight > 0.0:
+                        for inter_post in out.get('interim_posteriors', []):
+                            inter_log = torch.log(inter_post.clamp(min=1e-8))
+                            inter_loss = ctc_loss_fn(inter_log.transpose(0,1), txt, out['length'], t_lengths).sum()
+                            if torch.isfinite(inter_loss):
+                                loss = loss + inter_weight * inter_loss
                     
                 blank_prob = blank_p(cur_probs.detach(), dataloader.tokenizer)
                 # check for non-finite loss before it can corrupt trainable weights

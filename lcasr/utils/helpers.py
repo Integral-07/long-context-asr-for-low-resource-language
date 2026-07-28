@@ -20,7 +20,7 @@ def load_pairs(pairs:str = '/mnt/parscratch/users/acp21rjf/spotify/audio_txt_pai
     return load_json(pairs)
 
 def get_config_from_checkpoint(checkpoint_path:str, out_path:str):
-    checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     config = checkpoint['config']
     OmegaConf.save(config, out_path)
 

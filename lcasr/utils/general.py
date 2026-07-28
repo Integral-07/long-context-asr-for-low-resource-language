@@ -187,7 +187,7 @@ def load_checkpoint(
     if latest_checkpoint is None:
         return [], 0, 0 # seen_ids, step, epoch
     path = os.path.join(path, latest_checkpoint)
-    checkpoint = torch.load(path, map_location=device)
+    checkpoint = torch.load(path, map_location=device, weights_only=False)
     if args and args.remove_scheduler:
         checkpoint['scheduler'] = None
         checkpoint['sequence_scheduler'] = None
@@ -227,7 +227,7 @@ def avg_all_models_in_dir(path:str, out_path:str, model_name:str='step_105360.pt
     for folder in tqdm(all_folders):
         model_path = os.path.join(path, folder, model_name)
   
-        model = torch.load(model_path, map_location='cpu')
+        model = torch.load(model_path, map_location='cpu', weights_only=False)
         state_dict = model['model']
         if avg_model is None:
             avg_model = {key:state_dict[key] * (1/total_models) for key in state_dict.keys()}

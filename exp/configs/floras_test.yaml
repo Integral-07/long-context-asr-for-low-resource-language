@@ -48,12 +48,12 @@ wandb:
   project_name: spotify_long_context
   name: test
   id: ""
-  dir: /mnt/parscratch/users/acp21rjf/wandb_log/
+  dir: /home/t23cs033/wandb_log/
   update_config_with_wandb_id: false
 
 checkpointing:
-  dir: /mnt/parscratch/users/acp21rjf/tmp/
-  save_every_n_steps: 200000
+  dir: /home/t23cs033/checkpoints/
+  save_every_n_steps: 3000
 
 data:
   path: /users/acp21rjf/align_floras50/tmp/mapping.json
@@ -66,9 +66,9 @@ training:
   backwards_every: 1
   max_seq_len: 0
   clip_value: 0.8
-  intermediate_loss_weighting: 0.0
+  intermediate_loss_weighting: 0.5
   random_seed: 6433
-  tokenizer_path: /users/acp21rjf/long-context-asr/lcasr/artifacts/floras50/tokenizer.model
+  max_epochs: 20
 
 sequence_scheduler:
   increase_every: 5000
