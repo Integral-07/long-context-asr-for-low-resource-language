@@ -261,7 +261,8 @@ def train(
                     inter_weight = args.config['training'].get('intermediate_loss_weighting', 0.0)
                     if inter_weight > 0.0:
                         for inter_post in out.get('interim_posteriors', []):
-                            inter_loss = ctc_loss_fn(inter_post.transpose(0,1), txt, out['length'], t_lengths).sum()
+                            inter_log = torch.log(inter_post.clamp(min=1e-8))
+                            inter_loss = ctc_loss_fn(inter_log.transpose(0,1), txt, out['length'], t_lengths).sum()
                             if torch.isfinite(inter_loss):
                                 loss = loss + inter_weight * inter_loss
                     
