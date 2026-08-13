@@ -15,5 +15,6 @@ paths.yaml
 .claude/
 .~lock.*#
 symphony/.env
+.DS_Store
 
 !eval/synthetic_in_context_dataset/**/*.wav
