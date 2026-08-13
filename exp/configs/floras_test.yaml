@@ -68,7 +68,7 @@ training:
   clip_value: 0.8
   intermediate_loss_weighting: 0.5
   random_seed: 6433
-  max_epochs: 20
+  max_epochs: 50
 
 sequence_scheduler:
   increase_every: 5000
