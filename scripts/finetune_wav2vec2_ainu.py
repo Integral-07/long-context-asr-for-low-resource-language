@@ -84,6 +84,16 @@ def load_records(path: Path) -> List[dict]:
     return json.loads(path.read_text(encoding='utf-8'))
 
 
+def filter_by_duration(records: List[dict], max_duration_seconds: float):
+    kept = []
+    for rec in records:
+        info = torchaudio.info(rec['audio'])
+        duration = info.num_frames / info.sample_rate
+        if duration <= max_duration_seconds:
+            kept.append(rec)
+    return kept, len(records) - len(kept)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -93,11 +103,13 @@ def main():
     parser.add_argument('--num-epochs', type=float, default=30)
     parser.add_argument('--learning-rate', type=float, default=3e-4)
     parser.add_argument('--warmup-steps', type=int, default=200)
-    parser.add_argument('--per-device-batch-size', type=int, default=4)
-    parser.add_argument('--gradient-accumulation-steps', type=int, default=4)
+    parser.add_argument('--per-device-batch-size', type=int, default=2)
+    parser.add_argument('--gradient-accumulation-steps', type=int, default=8)
     parser.add_argument('--eval-steps', type=int, default=200)
     parser.add_argument('--save-steps', type=int, default=200)
     parser.add_argument('--freeze-feature-encoder', action='store_true', default=True)
+    parser.add_argument('--max-duration-seconds', type=float, default=30.0,
+                        help='これより長い発話は学習/評価から除外する(極端に長い外れ値によるOOM対策)')
     parser.add_argument('--max-train-records', type=int, default=None,
                         help='スモークテスト用に学習件数を制限')
     parser.add_argument('--max-eval-records', type=int, default=None,
@@ -119,6 +131,12 @@ def main():
 
     train_records = load_records(data_dir / 'train.json')
     dev_records = load_records(data_dir / 'dev.json')
+
+    if args.max_duration_seconds:
+        train_records, n_dropped_train = filter_by_duration(train_records, args.max_duration_seconds)
+        dev_records, n_dropped_dev = filter_by_duration(dev_records, args.max_duration_seconds)
+        print(f'duration filter (<= {args.max_duration_seconds}s): '
+              f'dropped {n_dropped_train} train, {n_dropped_dev} dev')
     if args.max_train_records:
         train_records = train_records[:args.max_train_records]
     if args.max_eval_records:
@@ -159,6 +177,7 @@ def main():
         eval_strategy='steps',
         num_train_epochs=args.num_epochs,
         fp16=True,
+        gradient_checkpointing=True,
         save_steps=args.save_steps,
         eval_steps=args.eval_steps,
         logging_steps=50,
