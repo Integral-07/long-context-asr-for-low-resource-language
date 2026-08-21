@@ -73,8 +73,6 @@ training:
   random_seed: 552268
   dtype: bfloat16
 
-model_class: SCConformerXL
-
 spec_augment:
   n_time_masks: 2
   time_mask_param: 30
