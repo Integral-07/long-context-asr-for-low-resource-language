@@ -25,21 +25,8 @@ from pathlib import Path
 import torch
 
 from prepare_ainu import parse_transcript, load_clip, SR, HOP_LENGTH
+from ainu_splits import split_for
 from lcasr.utils.audio_tools import to_spectogram
-
-# prepare_ainu.py 側の連結版(実験3)と揃えた held-out コレクション。
-# 長さで層化(短いものと20分弱のものを両方含める)し、dev/testそれぞれ
-# 合計40〜50分程度になるように選んでいる。
-TEST_COLLECTIONS = {'at08', 'at30', 'at40', 'at13', 'at22'}
-DEV_COLLECTIONS = {'at54', 'at18', 'at27', 'at36', 'at10'}
-
-
-def split_for(collection_id: str) -> str:
-    if collection_id in TEST_COLLECTIONS:
-        return 'test'
-    if collection_id in DEV_COLLECTIONS:
-        return 'dev'
-    return 'train'
 
 
 def main():

@@ -32,6 +32,8 @@ dependencies = [
     "pyctcdecode",
     "jiwer>=3.0",
     "openai-whisper",
+    "transformers>=4.40",
+    "accelerate>=0.30",
 ]
 
 [project.optional-dependencies]
