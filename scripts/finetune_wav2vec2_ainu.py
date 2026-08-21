@@ -56,8 +56,7 @@ class AinuCTCDataset(Dataset):
 
         input_values = self.processor(
             waveform, sampling_rate=SR).input_values[0]
-        with self.processor.as_target_processor():
-            labels = self.processor(rec['text']).input_ids
+        labels = self.processor.tokenizer(rec['text']).input_ids
 
         return {'input_values': input_values, 'labels': labels,
                 'length': len(input_values)}
@@ -72,8 +71,8 @@ class DataCollatorCTCWithPadding:
         label_features = [{'input_ids': f['labels']} for f in features]
 
         batch = self.processor.pad(input_features, padding=True, return_tensors='pt')
-        with self.processor.as_target_processor():
-            labels_batch = self.processor.pad(label_features, padding=True, return_tensors='pt')
+        labels_batch = self.processor.tokenizer.pad(
+            label_features, padding=True, return_tensors='pt')
         labels = labels_batch['input_ids'].masked_fill(
             labels_batch.attention_mask.ne(1), -100)
 
