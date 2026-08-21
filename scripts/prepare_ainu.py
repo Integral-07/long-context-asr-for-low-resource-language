@@ -9,11 +9,15 @@ mapping.json 形式に変換する。
 クリップ内部の単語ごとのタイムスタンプはクリップの尺の中で線形補間した
 近似値である点に注意。
 
+train/dev/testの分割はコレクション単位で固定し、prepare_ainu_utterances.py
+(実験1/2用の非連結版)と同じ held-out コレクションを使うことで、3実験の
+評価セットを揃えている。
+
 Usage:
   uv run --extra cpu scripts/prepare_ainu.py \\
     --corpus-dir ainu_corpus \\
     --spec-dir   ainu_processed \\
-    --output     data/ainu/mapping.json
+    --output-dir data/ainu
 """
 
 import argparse
@@ -30,6 +34,18 @@ HOP_LENGTH = 160
 SR = 16000
 
 ID_RE = re.compile(r'^([A-Za-z]+\d+)-(\d+)$')
+
+# prepare_ainu_utterances.py(実験1/2, 非連結版)と揃えた held-out コレクション。
+TEST_COLLECTIONS = {'at08', 'at30', 'at40', 'at13', 'at22'}
+DEV_COLLECTIONS = {'at54', 'at18', 'at27', 'at36', 'at10'}
+
+
+def split_for(collection_id: str) -> str:
+    if collection_id in TEST_COLLECTIONS:
+        return 'test'
+    if collection_id in DEV_COLLECTIONS:
+        return 'dev'
+    return 'train'
 
 
 def parse_transcript(path: Path):
@@ -65,7 +81,8 @@ def main():
                         help='transcripts/ と audio/ を含むディレクトリ')
     parser.add_argument('--spec-dir', required=True,
                         help='出力先 (.spec.pt / 単語タイムスタンプJSON)')
-    parser.add_argument('--output', required=True, help='mapping.json の出力パス')
+    parser.add_argument('--output-dir', required=True,
+                        help='train/dev/test それぞれの mapping.json を書き出すディレクトリ')
     args = parser.parse_args()
 
     corpus_dir = Path(args.corpus_dir)
@@ -79,11 +96,12 @@ def main():
     trans_files = sorted(transcripts_dir.glob('at*.trans.txt'))
     print(f'{len(trans_files)} collections found')
 
-    mapping = {}
+    mappings = {'train': {}, 'dev': {}, 'test': {}}
     total_missing_audio = 0
 
     for trans_path in trans_files:
         collection_id = trans_path.stem.replace('.trans', '')
+        split = split_for(collection_id)
         entries = parse_transcript(trans_path)
 
         clips, words, cursor = [], [], 0.0
@@ -124,24 +142,24 @@ def main():
             json.dump(words, f, ensure_ascii=False)
 
         duration = round(spec.shape[-1] * HOP_LENGTH / SR, 2)
-        mapping[collection_id] = {
+        mappings[split][collection_id] = {
             'audio': str(spec_path.resolve()),
             'txt': str(txt_path.resolve()),
             'duration': duration,
         }
-        print(f'  {collection_id}: {len(clips)} clips, {len(words)} words ({duration/60:.1f} min)')
+        print(f'  {collection_id} [{split}]: {len(clips)} clips, {len(words)} words ({duration/60:.1f} min)')
 
     if total_missing_audio:
         print(f'\nWARN: {total_missing_audio} transcript rows had no matching audio file')
 
-    total_hours = sum(v['duration'] for v in mapping.values()) / 3600
-    print(f'\nResult: {len(mapping)} collections ({total_hours:.2f} h)')
-
-    output_path = Path(args.output)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(mapping, f, indent=2, ensure_ascii=False)
-    print(f'Saved: {output_path}')
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for split, mapping in mappings.items():
+        total_hours = sum(v['duration'] for v in mapping.values()) / 3600
+        out_path = output_dir / f'{split}_mapping.json'
+        with open(out_path, 'w', encoding='utf-8') as f:
+            json.dump(mapping, f, indent=2, ensure_ascii=False)
+        print(f'{split}: {len(mapping)} collections ({total_hours:.2f} h) -> {out_path}')
 
 
 if __name__ == '__main__':

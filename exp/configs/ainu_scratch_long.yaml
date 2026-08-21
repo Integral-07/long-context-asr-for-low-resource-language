@@ -1,0 +1,95 @@
+model_class: 'SCConformerXL'
+
+model:
+  feat_in: 80
+  n_layers: 6
+  d_model: 256
+  n_heads: 8
+  head_dim: 32
+  dropout_ff: 0.1
+  dropout_attn: 0.1
+  dropout_conv: 0.1
+  subsampling_factor: 8
+  subsampling: 'dw_striding'
+  subsampling_act: 'silu'
+  subsampling_conv_channels: 256
+  self_condition_subsampling: false
+  subsampling_norm_out: false
+  conv_kernel_size: 9
+  qk_rms_norm: false
+  shift_kvs: false
+  self_conditioning: true
+  gated_sc: false
+  decoder_norm: true
+  use_rotary: true
+  fourier_pos_enc: false
+  encoder_mode: 'conformer'
+  default_norm: 'layer_norm'
+  sandwich_norm: false
+  bias_in_ff: false
+  checkpoint_every_n_layers: 0
+  rotary_base_freq: 1500000
+  flash_attn: true
+
+optimizer:
+  name: 'madgrad'
+  args:
+    lr: 1e-3
+
+scheduler:
+  warmup_steps: 500
+
+# 実験2(固定3072フレーム=30.72秒、sequence_schedulerなし)との対になる設定。
+# こちらは512フレーム(5.12秒)から開始し、sequence_schedulerで段階的に
+# 16384フレーム(約2.73分、論文の "2.7min" 文脈条件に相当)まで伸ばす。
+# モデル・データ・トークナイザ・学習レシピは実験2と同一で、違いは
+# 「長い(連結済み)音声を使い、文脈を伸ばしながら学習するかどうか」のみ。
+audio_chunking:
+  size: 512
+  overlap: 0
+
+sequence_scheduler:
+  increase_every: 200
+  stop_after: 999999
+  start_after: 0
+  max_sequence_length: 16384
+  increase_by_multiplier: 2
+  batch_size_multiplier: 0.5
+  interpolate_rotary: false
+
+wandb:
+  use: false
+  project_name: "ainu_scratch_long"
+  name: "ainu-scratch-long-context"
+  id: ""
+  update_config_with_wandb_id: false
+
+checkpointing:
+  dir: /home/t23cs033/long-context-asr/checkpoints/ainu_scratch_long
+  save_every_n_steps: 150
+
+data:
+  path: /home/t23cs033/long-context-asr/data/ainu/train_mapping.json
+
+training:
+  tokenizer_path: /home/t23cs033/long-context-asr/lcasr/artifacts/ainu/tokenizer.model
+  start_spec_augment_after_n_epochs: 5
+  max_epochs: 80
+  batch_size: 16
+  backprop_every: 1
+  backwards_every: 1
+  max_seq_len: 0
+  clip_value: 0.8
+  intermediate_loss_weighting: 0.5
+  random_seed: 552268
+  dtype: bfloat16
+
+spec_augment:
+  n_time_masks: 2
+  time_mask_param: 30
+  n_freq_masks: 2
+  freq_mask_param: 18
+  iid_masks: true
+  min_p: 0.0
+  max_p: 0.0
+  zero_masking: false
