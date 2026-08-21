@@ -60,7 +60,7 @@ class AinuCTCDataset(Dataset):
             labels = self.processor(rec['text']).input_ids
 
         return {'input_values': input_values, 'labels': labels,
-                'input_length': len(input_values)}
+                'length': len(input_values)}
 
 
 @dataclass
@@ -153,7 +153,7 @@ def main():
 
     training_args = TrainingArguments(
         output_dir=str(output_dir),
-        group_by_length=True,
+        train_sampling_strategy='group_by_length',
         per_device_train_batch_size=args.per_device_batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         per_device_eval_batch_size=args.per_device_batch_size,
