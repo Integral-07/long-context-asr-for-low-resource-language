@@ -50,6 +50,8 @@ def main():
                         help='出力先 (.spec.pt / 単語タイムスタンプJSON)')
     parser.add_argument('--output-dir', required=True,
                         help='train/dev/test それぞれの mapping.json を書き出すディレクトリ')
+    parser.add_argument('--max-duration-seconds', type=float, default=30.0,
+                        help='これより長い発話は除外する(実験1のwav2vec2ベースラインと揃えた外れ値対策)')
     args = parser.parse_args()
 
     corpus_dir = Path(args.corpus_dir)
@@ -64,6 +66,7 @@ def main():
     mappings = {'train': {}, 'dev': {}, 'test': {}}
     missing_audio = 0
     empty_text = 0
+    too_long = 0
 
     for trans_path in trans_files:
         collection_id = trans_path.stem.replace('.trans', '')
@@ -83,6 +86,9 @@ def main():
 
             waveform = load_clip(wav_path)
             dur = waveform.shape[-1] / SR
+            if dur > args.max_duration_seconds:
+                too_long += 1
+                continue
 
             spec = to_spectogram(waveform).to(torch.float16)
             spec_path = spec_dir / f'{seg_id}.spec.pt'
@@ -110,6 +116,8 @@ def main():
         print(f'WARN: {missing_audio} transcript rows had no matching audio file')
     if empty_text:
         print(f'WARN: {empty_text} transcript rows had no words after splitting, skipped')
+    if too_long:
+        print(f'WARN: {too_long} transcript rows exceeded {args.max_duration_seconds}s, skipped')
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
