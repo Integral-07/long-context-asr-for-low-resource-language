@@ -13,11 +13,24 @@ train/dev/testの分割はコレクション単位で固定し、prepare_ainu_ut
 (実験1/2用の非連結版)と同じ held-out コレクションを使うことで、3実験の
 評価セットを揃えている。
 
+--fold を指定すると、この固定splitの代わりに ainu_kfold_splits.py の
+k-fold割り当てを使う(train/testの2分割のみ、devなし)。②③のheld-out
+コレクションを5個から53個(全コレクション)まで広げ、統計的検定力を
+上げるための交差検証用。
+
 Usage:
+  # 従来の固定split(train 43 / dev 5 / test 5)
   uv run --extra cpu scripts/prepare_ainu.py \\
     --corpus-dir ainu_corpus \\
     --spec-dir   ainu_processed \\
     --output-dir data/ainu
+
+  # k-fold交差検証(fold 0 をtestとして使う場合)
+  uv run --extra cpu scripts/prepare_ainu.py \\
+    --corpus-dir ainu_corpus \\
+    --spec-dir   ainu_kfold_processed/fold0 \\
+    --output-dir data/ainu_kfold/fold0 \\
+    --fold 0
 """
 
 import argparse
@@ -41,11 +54,20 @@ DEV_COLLECTIONS = {'at54', 'at18', 'at27', 'at36', 'at10'}
 
 
 def split_for(collection_id: str) -> str:
+    """従来の固定split(train 43 / dev 5 / test 5)。--fold指定時は使わない。"""
     if collection_id in TEST_COLLECTIONS:
         return 'test'
     if collection_id in DEV_COLLECTIONS:
         return 'dev'
     return 'train'
+
+
+def kfold_split_for(collection_id: str, fold: int) -> str:
+    """k-fold交差検証用のsplit(train/testのみ、devなし)。
+    ainu_kfold_splits.py が唯一の分割定義を持つ(②の発話単位prepと
+    fold番号を共有するため)。"""
+    from ainu_kfold_splits import split_for as _kfold_split_for
+    return _kfold_split_for(collection_id, fold)
 
 
 def parse_transcript(path: Path):
@@ -83,6 +105,9 @@ def main():
                         help='出力先 (.spec.pt / 単語タイムスタンプJSON)')
     parser.add_argument('--output-dir', required=True,
                         help='train/dev/test それぞれの mapping.json を書き出すディレクトリ')
+    parser.add_argument('--fold', type=int, default=None,
+                        help='指定するとk-fold交差検証モード(train/testのみ、devなし)。'
+                             '0..ainu_kfold_splits.N_FOLDS-1 のfold番号をtestとして使う。')
     args = parser.parse_args()
 
     corpus_dir = Path(args.corpus_dir)
@@ -93,16 +118,22 @@ def main():
     spec_dir.mkdir(parents=True, exist_ok=True)
     txt_dir.mkdir(parents=True, exist_ok=True)
 
+    split_names = ('train', 'test') if args.fold is not None else ('train', 'dev', 'test')
+    get_split = (lambda cid: kfold_split_for(cid, args.fold)) if args.fold is not None else split_for
+
     trans_files = sorted(transcripts_dir.glob('at*.trans.txt'))
     print(f'{len(trans_files)} collections found')
 
-    mappings = {'train': {}, 'dev': {}, 'test': {}}
+    mappings = {name: {} for name in split_names}
     total_missing_audio = 0
 
     for trans_path in trans_files:
         collection_id = trans_path.stem.replace('.trans', '')
-        split = split_for(collection_id)
         entries = parse_transcript(trans_path)
+        if not entries:
+            # at33: 書き起こしが空(音声なし)。fold割り当ても持たないのでここで弾く。
+            continue
+        split = get_split(collection_id)
 
         clips, words, cursor = [], [], 0.0
         for seg_id, _, text in entries:
