@@ -88,4 +88,4 @@ done
 
 echo
 echo "=== aggregating all $N_FOLDS folds ==="
-python scripts/aggregate_kfold_results.py --checkpoints-dir checkpoints/ainu_kfold --n-folds "$N_FOLDS"
+uv run --extra gpu python scripts/aggregate_kfold_results.py --checkpoints-dir checkpoints/ainu_kfold --n-folds "$N_FOLDS"
