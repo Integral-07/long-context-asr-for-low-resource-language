@@ -19,12 +19,19 @@
 
 set -euo pipefail
 
+export PATH="$HOME/.local/bin:$PATH"  # uv がログインシェル経由でないと PATH に無いことがある
+
 N_FOLDS="${1:-5}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
+# 全ステップを --extra gpu で統一する。--extra cpu は本環境ではtorchaudioの
+# バイナリ不整合(undefined symbol: aoti_torch_abi_version)で壊れていた。
+# データ準備自体はCPUだけで動く処理だが、gpu extraのtorch/torchaudioで
+# 動かしても問題はない。
+
 echo "=== generating configs for $N_FOLDS folds ==="
-uv run --extra cpu python scripts/generate_kfold_configs.py --n-folds "$N_FOLDS"
+uv run --extra gpu python scripts/generate_kfold_configs.py --n-folds "$N_FOLDS"
 
 for fold in $(seq 0 $((N_FOLDS - 1))); do
   echo
@@ -33,7 +40,7 @@ for fold in $(seq 0 $((N_FOLDS - 1))); do
   echo "############################################"
 
   echo "--- [$fold] prepare_ainu.py (③ long, collection-concatenated) ---"
-  uv run --extra cpu python scripts/prepare_ainu.py \
+  uv run --extra gpu python scripts/prepare_ainu.py \
     --corpus-dir ainu_corpus \
     --spec-dir   "ainu_kfold_processed/fold${fold}" \
     --output-dir "data/ainu_kfold/fold${fold}" \
