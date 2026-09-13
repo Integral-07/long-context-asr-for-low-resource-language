@@ -35,11 +35,19 @@ DEV_COLLECTIONS = {'at54', 'at18', 'at27', 'at36', 'at10'}
 
 
 def split_for(collection_id: str) -> str:
+    """従来の固定split(train 43 / dev 5 / test 5)。--fold指定時は使わない。"""
     if collection_id in TEST_COLLECTIONS:
         return 'test'
     if collection_id in DEV_COLLECTIONS:
         return 'dev'
     return 'train'
+
+
+def kfold_split_for(collection_id: str, fold: int) -> str:
+    """k-fold交差検証用のsplit(train/testのみ、devなし)。prepare_ainu.pyの
+    連結版(③)と同じ ainu_kfold_splits.py の割り当てを共有する。"""
+    from ainu_kfold_splits import split_for as _kfold_split_for
+    return _kfold_split_for(collection_id, fold)
 
 
 def main():
@@ -52,6 +60,9 @@ def main():
                         help='train/dev/test それぞれの mapping.json を書き出すディレクトリ')
     parser.add_argument('--max-duration-seconds', type=float, default=30.0,
                         help='これより長い発話は除外する(実験1のwav2vec2ベースラインと揃えた外れ値対策)')
+    parser.add_argument('--fold', type=int, default=None,
+                        help='指定するとk-fold交差検証モード(train/testのみ、devなし)。'
+                             '0..ainu_kfold_splits.N_FOLDS-1 のfold番号をtestとして使う。')
     args = parser.parse_args()
 
     corpus_dir = Path(args.corpus_dir)
@@ -62,16 +73,21 @@ def main():
     spec_dir.mkdir(parents=True, exist_ok=True)
     txt_dir.mkdir(parents=True, exist_ok=True)
 
+    split_names = ('train', 'test') if args.fold is not None else ('train', 'dev', 'test')
+    get_split = (lambda cid: kfold_split_for(cid, args.fold)) if args.fold is not None else split_for
+
     trans_files = sorted(transcripts_dir.glob('at*.trans.txt'))
-    mappings = {'train': {}, 'dev': {}, 'test': {}}
+    mappings = {name: {} for name in split_names}
     missing_audio = 0
     empty_text = 0
     too_long = 0
 
     for trans_path in trans_files:
         collection_id = trans_path.stem.replace('.trans', '')
-        split = split_for(collection_id)
         entries = parse_transcript(trans_path)
+        if not entries:
+            continue  # at33: 書き起こしが空(音声なし)。fold割り当ても持たない。
+        split = get_split(collection_id)
 
         for seg_id, _, text in entries:
             wav_path = audio_dir / f'{seg_id}.wav'
