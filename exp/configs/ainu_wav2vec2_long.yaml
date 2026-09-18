@@ -53,7 +53,9 @@ wandb:
 
 checkpointing:
   dir: /home/t23cs033/long-context-asr/checkpoints/ainu_wav2vec2_long
-  save_every_n_steps: 2000
+  # 43コレクション/エポックなので2000のままだと30エポック終了まで一度も
+  # 保存されない。実験3(exp/configs/ainu_scratch_long.yaml)と同じ150に。
+  save_every_n_steps: 150
 
 data:
   path: /home/t23cs033/long-context-asr/data/ainu_wav2vec2_longcontext_collections/train_mapping.json
