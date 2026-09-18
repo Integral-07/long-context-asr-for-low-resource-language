@@ -9,6 +9,12 @@ model:
   # lcasr/utils/training.py:batch_to_chunks のCTC実行可能性フィルタが
   # ここを読むため必須(デフォルト8のままだとSCConformerXL用の値になる)。
   subsampling_factor: 1
+  # チャンクのフレーム境界を秒に変換する際に使う実際のhop(320サンプル=20ms,
+  # 50Hz)。lcasr/utils/dataloading.py:chunk_text_json のデフォルト(mel-spectrogram
+  # 用の160=100Hz)のままだと、チャンクの時間窓を半分の長さと誤認識し、音声と
+  # テキストの対応が壊れる(dl12実機でcondition Bが完全なblank collapseに
+  # 陥ったことで発覚)。
+  text_hop_length: 320
 
 optimizer:
   name: 'adamw'

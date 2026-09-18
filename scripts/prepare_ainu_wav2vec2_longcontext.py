@@ -139,8 +139,10 @@ def main():
         full_waveform = torch.cat(clips, dim=-1)
         duration = round(full_waveform.shape[-1] / SR, 2)
 
-        feat = extract_features(feature_extractor, full_waveform, device)  # (1, conv_dim=512, time@50Hz)
-        feat = feat.squeeze(0).to(torch.float16)  # (512, time)
+        # (1, conv_dim=512, time@50Hz)。lcasr全体の規約(.spec.pt等)と揃えて
+        # 3次元のまま保存する(先頭のbatch次元を潰さない) - fetch_logits等が
+        # spec[:, :, i:i+seq_len] のように3次元を前提にスライスするため。
+        feat = extract_features(feature_extractor, full_waveform, device).to(torch.float16)
 
         feat_path = feat_dir / f'{collection_id}.w2v2feat.pt'
         torch.save(feat, str(feat_path))

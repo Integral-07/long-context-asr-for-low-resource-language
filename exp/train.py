@@ -178,6 +178,7 @@ def train(
             chunk_overlap=chunk_overlap,
             subsampling_factor=args.config['model'].get('subsampling_factor', 8),
             ctc_len_margin=args.config['training'].get('ctc_len_margin', 1),
+            text_hop_length=args.config['model'].get('text_hop_length', None),
         )
         seen_ids.extend(ids)
 
