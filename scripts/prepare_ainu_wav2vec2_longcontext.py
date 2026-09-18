@@ -8,9 +8,15 @@ scripts/prepare_ainu.py(実験③, mel-spectrogram版)とほぼ同じ処理だ�
 (feature_extractor のみ、eval + no_grad)に生波形を通して得た
 (conv_dim=512, time@50Hz) の特徴量を保存する点だけが異なる。この
 CNN出力を使うことで、学習時にはfeature_projection以降の
-Transformer(24層、事前学習済み)だけを対象にすればよく、CNNの
-受容野(約25ms)に起因するチャンク境界の近似誤差も、コレクション
-全体を一度にCNNへ通すことで実質発生しない。
+Transformer(24層、事前学習済み)だけを対象にすればよい。
+
+コレクション全体(最長19分超)をfloat32で一度にCNNに通すと、no_grad下でも
+中間活性化だけでGPUメモリを数〜十数GB消費しOOMする(dl12実機で確認済み)。
+生波形を窓分割してから繋ぎ合わせる案は、conv1d 7層合成の出力長計算が単純な
+割り算ではなく窓の境界で丸め誤差が出て厳密に一致させるのが難しいと判明した
+ため(ローカルテストでフレーム数がずれた)、採用しなかった。代わりに
+fp16でCNNを実行してメモリを半減させる(それでも足りない一部の収録だけ
+CPU float32にフォールバックする)、というシンプルな方式にしている。
 
 train/dev/testの分割・単語タイムスタンプの線形補間は prepare_ainu.py と
 同一のロジックを共有する(import して再利用、重複させない)。
@@ -39,6 +45,27 @@ from prepare_ainu import SR, load_clip, parse_transcript, split_for
 HOP_LENGTH = 320  # wav2vec2-large-xlsr の累積 conv stride (5*2*2*2*2*2*2), 50Hz相当
 
 
+def extract_features(feature_extractor, waveform: torch.Tensor, device: torch.device) -> torch.Tensor:
+    """waveform: (1, n_samples). まずfp16のGPUで通す(float32の半分のメモリで済む)。
+    それでもOOMする収録(最長19分超)だけ、このコレクション限定でCPU float32に
+    一時的に退避して処理し、終わったら元のGPU/fp16に戻す。"""
+    if device.type != 'cuda':
+        with torch.no_grad():
+            return feature_extractor(waveform.to(device=device, dtype=torch.float32)).cpu()
+    try:
+        with torch.no_grad():
+            feat = feature_extractor(waveform.to(device=device, dtype=torch.float16))
+        return feat.float().cpu()
+    except torch.cuda.OutOfMemoryError:
+        print('    WARN: OOM on GPU(fp16), falling back to CPU(float32) for this collection')
+        torch.cuda.empty_cache()
+        feature_extractor.to(device='cpu', dtype=torch.float32)
+        with torch.no_grad():
+            feat = feature_extractor(waveform.to(device='cpu', dtype=torch.float32))
+        feature_extractor.to(device=device, dtype=torch.float16)
+        return feat.cpu()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -55,6 +82,8 @@ def main():
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     w2v2 = Wav2Vec2Model.from_pretrained(args.base_model).to(device)
+    if device.type == 'cuda':
+        w2v2 = w2v2.half()
     w2v2.eval()
     feature_extractor = w2v2.feature_extractor
 
@@ -110,9 +139,8 @@ def main():
         full_waveform = torch.cat(clips, dim=-1)
         duration = round(full_waveform.shape[-1] / SR, 2)
 
-        with torch.no_grad():
-            feat = feature_extractor(full_waveform.to(device))  # (1, conv_dim=512, time@50Hz)
-        feat = feat.squeeze(0).to(torch.float16).cpu()  # (512, time)
+        feat = extract_features(feature_extractor, full_waveform, device)  # (1, conv_dim=512, time@50Hz)
+        feat = feat.squeeze(0).to(torch.float16)  # (512, time)
 
         feat_path = feat_dir / f'{collection_id}.w2v2feat.pt'
         torch.save(feat, str(feat_path))

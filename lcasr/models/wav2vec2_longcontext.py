@@ -2,18 +2,10 @@ import torch, torch.nn as nn
 from typing import Optional
 
 from transformers import Wav2Vec2Model
+from transformers.masking_utils import create_bidirectional_mask
 
 from lcasr.components.decoder import ASRLinearSCDecoder
 from lcasr.models.base import BaseModel
-
-
-def _build_attention_mask(pad_mask: Optional[torch.Tensor], dtype: torch.dtype) -> Optional[torch.Tensor]:
-    '''pad_mask: (batch, seq) bool, True = padding (invalid position). Returns an
-    additive float mask (batch, 1, 1, seq) as expected by HF attention backends, or
-    None if there is no padding to mask (uniform-length batch).'''
-    if pad_mask is None:
-        return None
-    return pad_mask[:, None, None, :].to(dtype) * torch.finfo(dtype).min
 
 
 class Wav2Vec2CTCLongContext(BaseModel):
@@ -47,6 +39,7 @@ class Wav2Vec2CTCLongContext(BaseModel):
 
         w2v2 = Wav2Vec2Model.from_pretrained(base_model, attn_implementation=attn_implementation)
 
+        self.config = w2v2.config
         self.d_model = w2v2.config.hidden_size
         self.self_conditioning = self_conditioning
         self.stable_layer_norm = bool(w2v2.config.do_stable_layer_norm)
@@ -93,10 +86,20 @@ class Wav2Vec2CTCLongContext(BaseModel):
 
         hidden_states, _ = self.feature_projection(audio_signal)
 
-        pad_mask = None
+        valid_mask = None
         if length.max() != length.min():
-            pad_mask = torch.arange(max_len, device=hidden_states.device).expand(hidden_states.size(0), max_len) >= length.unsqueeze(1)
-        attention_mask = _build_attention_mask(pad_mask, hidden_states.dtype)
+            valid_mask = torch.arange(max_len, device=hidden_states.device).expand(hidden_states.size(0), max_len) < length.unsqueeze(1)
+            hidden_states = hidden_states * valid_mask.unsqueeze(-1)  # zero out padded positions, matches HF's native encoder
+
+        # builds whatever mask representation the active attention backend
+        # (sdpa/eager/flash_attention_2) actually expects; a hand-built mask is not
+        # a stable contract across transformers versions (this changed between the
+        # 4.x and 5.x lines we tested against).
+        attention_mask = create_bidirectional_mask(
+            config=self.config,
+            inputs_embeds=hidden_states,
+            attention_mask=valid_mask,
+        )
 
         hidden_states = hidden_states + self.pos_conv_embed(hidden_states)
         if not self.stable_layer_norm:  # base wav2vec2: norm before layers
@@ -105,7 +108,8 @@ class Wav2Vec2CTCLongContext(BaseModel):
 
         interim_posteriors = []
         for lth, layer in enumerate(self.layers):
-            hidden_states = layer(hidden_states, attention_mask=attention_mask)[0]
+            layer_out = layer(hidden_states, attention_mask=attention_mask)
+            hidden_states = layer_out[0] if isinstance(layer_out, tuple) else layer_out
 
             if lth != len(self.layers) - 1 and self.self_conditioning:
                 interim_post = torch.nn.functional.softmax(decoder(x=hidden_states, logits=True), dim=-1)

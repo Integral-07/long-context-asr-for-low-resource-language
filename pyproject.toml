@@ -32,7 +32,11 @@ dependencies = [
     "pyctcdecode",
     "jiwer>=3.0",
     "openai-whisper",
-    "transformers>=4.40",
+    # Wav2Vec2CTCLongContext (lcasr/models/wav2vec2_longcontext.py) uses
+    # transformers.masking_utils.create_bidirectional_mask, only available from the
+    # 5.x line (not present in 4.57, the latest 4.x we checked) - pin the floor here
+    # so a fresh `uv sync` can't silently resolve back to an incompatible 4.x.
+    "transformers>=5.0",
     "accelerate>=0.30",
 ]
 
