@@ -73,8 +73,12 @@ def fetch_logits(args, model:SCConformerXL, spec:torch.Tensor, seq_len:int, over
 
     print(f'Using seq_len: {seq_len} and overlap: {overlap}')
 
-    all_logits = torch.zeros((1, spec_n//4 + seq_len, tokenizer.vocab_size() + 1))
-    logit_count = torch.zeros((1, spec_n//4 + seq_len, tokenizer.vocab_size() + 1))
+    # buffer sized generously above the true output length (spec_n / downsampling_factor):
+    # the original `spec_n // 4` assumed SCConformerXL's ~8x downsampling (4 = 8/2 margin).
+    # Generalize that same "half the real ratio" margin to any downsampling_factor.
+    buffer_len = spec_n // max(downsampling_factor // 2, 1) + seq_len
+    all_logits = torch.zeros((1, buffer_len, tokenizer.vocab_size() + 1))
+    logit_count = torch.zeros((1, buffer_len, tokenizer.vocab_size() + 1))
     
     logit_position = 0
     

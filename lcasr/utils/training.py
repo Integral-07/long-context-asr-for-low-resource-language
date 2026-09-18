@@ -104,6 +104,7 @@ def batch_to_chunks(
     chunk_overlap: int,
     subsampling_factor: int = 8,
     ctc_len_margin: int = 1,
+    text_hop_length: int = None,  # see chunk_text_json's hop_length docstring
 ):
     if isinstance(batch, dict):
         audio = batch['audio']
@@ -128,6 +129,7 @@ def batch_to_chunks(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
             spectogram_length=audio.shape[-1],
+            hop_length=text_hop_length,
         )
         for el in txt
     ]

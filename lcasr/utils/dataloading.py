@@ -3,6 +3,7 @@ from tqdm import tqdm
 from typing import Dict, Tuple, List, Optional
 from lcasr.utils.helpers import load_json, exists, load_pairs
 from lcasr.utils.audio_tools import total_seconds
+from lcasr.utils.audio_tools import HOP_LENGTH as _MEL_HOP_LENGTH, SR as _AUDIO_SR
 from lcasr.utils.augmentation import SpecAugment
 from einops import rearrange
 import sentencepiece as spm
@@ -32,10 +33,19 @@ def chunk_text_json( # TODO: speed up
         chunk_size: int,
         chunk_overlap: int,
         spectogram_length: int,
-        get_seconds: bool = False
+        get_seconds: bool = False,
+        hop_length: int = None,  # samples/frame of `text`'s frame grid; defaults to the
+        # mel-spectrogram hop (lcasr.utils.audio_tools.HOP_LENGTH=160, 100Hz) used
+        # everywhere else in this codebase. Pass the real value (e.g. 320 for
+        # wav2vec2's ~50Hz CNN output) for any other frame rate, otherwise chunk
+        # frame-boundaries get silently mis-converted to seconds and text gets
+        # matched to the wrong audio (this produced a full blank-collapse when
+        # training Wav2Vec2CTCLongContext with the default 160 assumed here).
     ):
     assert chunk_size > chunk_overlap, "chunk_size must be greater than chunk_overlap"
-    
+    hop_length = hop_length if hop_length is not None else _MEL_HOP_LENGTH
+    total_seconds = lambda n: (n * hop_length) / _AUDIO_SR
+
     def resolve_keys(text):
         el_0 = text[0]
         if 'startTime' in el_0 and 'endTime' in el_0 and 'word' in el_0:

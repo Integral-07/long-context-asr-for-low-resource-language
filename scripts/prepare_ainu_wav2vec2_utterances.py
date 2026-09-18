@@ -95,7 +95,10 @@ def main():
 
             with torch.no_grad():
                 feat = feature_extractor(waveform.to(device))  # (1, 512, time@50Hz)
-            feat = feat.squeeze(0).to(torch.float16).cpu()
+            # lcasr全体の規約(.spec.pt等)と揃え、3次元のまま保存する(先頭の
+            # batch次元を潰さない) - fetch_logitsがspec[:, :, i:i+seq_len]の
+            # ように3次元を前提にスライスするため。
+            feat = feat.to(torch.float16).cpu()
 
             feat_path = feat_dir / f'{seg_id}.w2v2feat.pt'
             torch.save(feat, str(feat_path))
