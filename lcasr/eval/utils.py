@@ -52,7 +52,12 @@ def decode_beams_lm(
 @torch.no_grad() # TODO: write batched version of this!!
 def fetch_logits(args, model:SCConformerXL, spec:torch.Tensor, seq_len:int, overlap:int, tokenizer, use_tqdm=True):
     spec_n = spec.shape[-1]
-    downsampling_factor = model.subsampling.subsampling_factor
+    # SCConformerXL has a conv subsampling module; models that consume
+    # already-subsampled/pre-extracted features (e.g. Wav2Vec2CTCLongContext)
+    # instead expose `subsampling_factor` directly (1 = no further subsampling).
+    downsampling_factor = getattr(model, 'subsampling_factor', None)
+    if downsampling_factor is None:
+        downsampling_factor = model.subsampling.subsampling_factor
     seq_len = seq_len if seq_len != -1 else args.config['audio_chunking']['size']
  
     if seq_len > spec_n:

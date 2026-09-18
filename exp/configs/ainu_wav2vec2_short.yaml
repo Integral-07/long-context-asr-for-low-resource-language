@@ -1,0 +1,54 @@
+model_class: 'Wav2Vec2CTCLongContext'
+
+model:
+  base_model: 'karolnowakowski/wav2vec2-large-xlsr-53-pretrain-ain'
+  decoder_norm: true
+  self_conditioning: true
+  attn_implementation: 'sdpa'
+  # このモデルの入力は事前計算済みCNN出力(追加のsubsamplingなし)。
+  # lcasr/utils/training.py:batch_to_chunks のCTC実行可能性フィルタが
+  # ここを読むため必須(デフォルト8のままだとSCConformerXL用の値になる)。
+  subsampling_factor: 1
+
+optimizer:
+  name: 'adamw'
+  args:
+    lr: 3e-4
+
+scheduler:
+  warmup_steps: 200
+
+# 1536 frames = 30.72s @ 50Hz (wav2vec2の累積conv stride 320 = 20ms/frame)。
+# 実験1(wav2vec2 FT)/実験2(scratch short)と揃えた30秒カットオフに相当する
+# 固定サイズ。sequence_scheduler を使わないので学習中ずっとこのサイズ =
+# 「事前学習済みモデル + 従来手法・長文脈なし」(条件A)。
+audio_chunking:
+  size: 1536
+  overlap: 0
+
+wandb:
+  use: false
+  project_name: "ainu_wav2vec2_short"
+  name: "ainu-wav2vec2-short-context"
+  id: ""
+  update_config_with_wandb_id: false
+
+checkpointing:
+  dir: /home/t23cs033/long-context-asr/checkpoints/ainu_wav2vec2_short
+  save_every_n_steps: 2000
+
+data:
+  path: /home/t23cs033/long-context-asr/data/ainu_wav2vec2_longcontext_utterances/train_mapping.json
+
+training:
+  tokenizer_path: /home/t23cs033/long-context-asr/lcasr/artifacts/ainu/tokenizer.model
+  start_spec_augment_after_n_epochs: -1  # 未検証のため今回は無効化
+  max_epochs: 30
+  batch_size: 8
+  backprop_every: 1
+  backwards_every: 1
+  max_seq_len: 0
+  clip_value: 0.8
+  intermediate_loss_weighting: 0.5
+  random_seed: 552268
+  dtype: bfloat16
