@@ -2,13 +2,7 @@ import torch
 from typing import Dict, List, Tuple
 
 from lcasr.models.sconformer_xl import SCConformerXL
-from lcasr.models.mamba import Mamba
-from lcasr.models.enc_dec_sconformer import EncDecSconformer
-from lcasr.models.enc_dec_sconformer_v2 import EncDecSconformerV2, RLEncDecSconformerV2
-from lcasr.models.sconformer_meta import SCConformerMeta
-from lcasr.models.sconformer_test import SCConformerTest
-from lcasr.models.augmentation_model import SoftMaskNN
-from lcasr.models.streaming_decoder_asr import StreamingDecoderASR
+from lcasr.models.wav2vec2_longcontext import Wav2Vec2CTCLongContext
 from lcasr.models.ctc_probe import (
     freeze_except,
     initialize_probe_decoder_from_backbone_ctc,
@@ -16,8 +10,6 @@ from lcasr.models.ctc_probe import (
     probe_trainable_prefixes,
     wrap_model_with_ctc_probe,
 )
-# from lcasr.models.metaconformer import MetaConformer
-# from lcasr.models.stconformer import STConformer
 from lcasr.utils.scheduling import SequenceWarmupManager, CosineLRScheduler, ConstantLRScheduler
 import os
 from tqdm import tqdm
@@ -33,45 +25,24 @@ import warnings
 
 def get_model_class(config:Dict={}, args:argparse.Namespace={}):
     model_classes = [
-        'SCConformerXL', 
-        'Mamba', 
-        'EncDecSconformer', 
-        'EncDecSconformerV2',
-        'RLEncDecSconformerV2',
-        'SCConformerMeta',
-        'SCConformerTest',
-        'SoftMaskNN',
-        'StreamingDecoderASR',
+        'SCConformerXL',
+        'Wav2Vec2CTCLongContext',
     ]
-    
+
 
     if 'model_class' in config:
         model_class = config['model_class']
     elif 'model_class' in args:
         model_class = args.model_class
     else:
-        warnings.warn('No model_class specified in model config or args, defaulting to SCConformerXL') 
+        warnings.warn('No model_class specified in model config or args, defaulting to SCConformerXL')
         model_class = 'SCConformerXL'
     assert model_class in model_classes, f'Unknown model class {model_class}, must be one of {model_classes}'
 
     if model_class == 'SCConformerXL':
         return SCConformerXL
-    elif model_class == 'Mamba':
-        return Mamba
-    elif model_class == 'EncDecSconformer':
-        return EncDecSconformer
-    elif model_class == 'EncDecSconformerV2':
-        return EncDecSconformerV2
-    elif model_class == 'RLEncDecSconformerV2':
-        return RLEncDecSconformerV2
-    elif model_class == 'SCConformerMeta':
-        return SCConformerMeta
-    elif model_class == 'SCConformerTest':
-        return SCConformerTest
-    elif model_class == 'SoftMaskNN':
-        return SoftMaskNN
-    elif model_class == 'StreamingDecoderASR':
-        return StreamingDecoderASR
+    elif model_class == 'Wav2Vec2CTCLongContext':
+        return Wav2Vec2CTCLongContext
     else:
         raise NotImplementedError(f'Unknown model class {model_class}, must be one of {model_classes}')
     
@@ -100,7 +71,7 @@ def load_optimizer(config:Dict, model:torch.nn.Module, and_scheduler=True):
     model_device = next(model.parameters()).device.type # check device of model
 
     optim_type = config['optimizer']['name']
-    allowed_types = ['adam', 'madgrad', 'mirrormadgrad']
+    allowed_types = ['adam', 'adamw', 'madgrad', 'mirrormadgrad']
     
     assert optim_type in allowed_types, f'Unknown optimizer {optim_type}, must be one of {allowed_types}'
     assert model_device in ['cpu', 'cuda'], f'Unknown device {model_device}, must be one of [cpu, cuda]'
