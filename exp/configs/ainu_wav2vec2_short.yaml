@@ -3,7 +3,12 @@ model_class: 'Wav2Vec2CTCLongContext'
 model:
   base_model: 'karolnowakowski/wav2vec2-large-xlsr-53-pretrain-ain'
   decoder_norm: true
-  self_conditioning: true
+  # ②③(0からの10Mパラメータモデル)向けに設計されたblank collapse対策で、
+  # 全24層で中間CTC loss+decoder出力の再投入を行う。事前学習済み315M
+  # モデルに対しては逆に不安定化要因になっている疑いがあり(本パイロット
+  # 30エポックでepoch8時点が最良、epoch12-20で悪化、epoch30でようやく
+  # epoch8並に戻るという不安定な挙動)、無効化して比較中。
+  self_conditioning: false
   attn_implementation: 'sdpa'
   # このモデルの入力は事前計算済みCNN出力(追加のsubsamplingなし)。
   # lcasr/utils/training.py:batch_to_chunks のCTC実行可能性フィルタが
@@ -55,6 +60,6 @@ training:
   backwards_every: 1
   max_seq_len: 0
   clip_value: 0.8
-  intermediate_loss_weighting: 0.5
+  intermediate_loss_weighting: 0.0  # self_conditioning: false なので無効(念のため明示)
   random_seed: 552268
   dtype: bfloat16
