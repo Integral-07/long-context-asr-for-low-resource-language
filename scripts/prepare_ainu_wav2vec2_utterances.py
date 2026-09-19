@@ -31,7 +31,7 @@ from pathlib import Path
 import torch
 
 sys.path.insert(0, str(Path(__file__).parent))
-from prepare_ainu import SR, load_clip, parse_transcript, split_for
+from prepare_ainu import SR, kfold_split_for, load_clip, parse_transcript, split_for
 
 
 def main():
@@ -46,6 +46,9 @@ def main():
     parser.add_argument('--max-duration-seconds', type=float, default=30.0,
                         help='これより長い発話は除外する(条件A側のchunk size=30.72sに収まる範囲、'
                              '実験1/2と揃えた外れ値対策)')
+    parser.add_argument('--fold', type=int, default=None,
+                        help='指定するとk-fold交差検証モード(train/testのみ、devなし)。'
+                             '0..ainu_kfold_splits.N_FOLDS-1 のfold番号をtestとして使う。')
     args = parser.parse_args()
 
     from transformers import Wav2Vec2Model
@@ -64,7 +67,9 @@ def main():
     txt_dir.mkdir(parents=True, exist_ok=True)
 
     trans_files = sorted(transcripts_dir.glob('at*.trans.txt'))
-    mappings = {name: {} for name in ('train', 'dev', 'test')}
+    split_names = ('train', 'test') if args.fold is not None else ('train', 'dev', 'test')
+    get_split = (lambda cid: kfold_split_for(cid, args.fold)) if args.fold is not None else split_for
+    mappings = {name: {} for name in split_names}
     missing_audio = 0
     empty_text = 0
     too_long = 0
@@ -74,7 +79,7 @@ def main():
         entries = parse_transcript(trans_path)
         if not entries:
             continue  # at33: 書き起こしが空(音声なし)
-        split = split_for(collection_id)
+        split = get_split(collection_id)
 
         for seg_id, _, text in entries:
             wav_path = audio_dir / f'{seg_id}.wav'
