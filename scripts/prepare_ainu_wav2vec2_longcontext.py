@@ -40,7 +40,7 @@ from pathlib import Path
 import torch
 
 sys.path.insert(0, str(Path(__file__).parent))
-from prepare_ainu import SR, load_clip, parse_transcript, split_for
+from prepare_ainu import SR, kfold_split_for, load_clip, parse_transcript, split_for
 
 HOP_LENGTH = 320  # wav2vec2-large-xlsr の累積 conv stride (5*2*2*2*2*2*2), 50Hz相当
 
@@ -76,6 +76,9 @@ def main():
     parser.add_argument('--output-dir', required=True,
                         help='train/dev/test それぞれの mapping.json を書き出すディレクトリ')
     parser.add_argument('--base-model', default='karolnowakowski/wav2vec2-large-xlsr-53-pretrain-ain')
+    parser.add_argument('--fold', type=int, default=None,
+                        help='指定するとk-fold交差検証モード(train/testのみ、devなし)。'
+                             '0..ainu_kfold_splits.N_FOLDS-1 のfold番号をtestとして使う。')
     args = parser.parse_args()
 
     from transformers import Wav2Vec2Model
@@ -98,7 +101,10 @@ def main():
     trans_files = sorted(transcripts_dir.glob('at*.trans.txt'))
     print(f'{len(trans_files)} collections found')
 
-    mappings = {name: {} for name in ('train', 'dev', 'test')}
+    split_names = ('train', 'test') if args.fold is not None else ('train', 'dev', 'test')
+    get_split = (lambda cid: kfold_split_for(cid, args.fold)) if args.fold is not None else split_for
+
+    mappings = {name: {} for name in split_names}
     total_missing_audio = 0
 
     for trans_path in trans_files:
@@ -107,7 +113,7 @@ def main():
         if not entries:
             # at33: 書き起こしが空(音声なし)。
             continue
-        split = split_for(collection_id)
+        split = get_split(collection_id)
 
         clips, words, cursor = [], [], 0.0
         for seg_id, _, text in entries:
