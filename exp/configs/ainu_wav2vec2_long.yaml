@@ -3,7 +3,10 @@ model_class: 'Wav2Vec2CTCLongContext'
 model:
   base_model: 'karolnowakowski/wav2vec2-large-xlsr-53-pretrain-ain'
   decoder_norm: true
-  self_conditioning: true
+  # 条件A(ainu_wav2vec2_short.yaml)と揃える。理由はそちらのコメント参照:
+  # 事前学習済み315Mモデルに対し全24層での自己条件付けが不安定化要因に
+  # なっている疑いがあり無効化して比較中。
+  self_conditioning: false
   attn_implementation: 'sdpa'
   # RoPE不使用(このモデルはRoPEを持たない)。exp/train.pyがsequence_scheduler
   # 伸長のたびに args.config['model']['use_rotary'] を無条件参照するため必須。
@@ -69,6 +72,6 @@ training:
   backwards_every: 1
   max_seq_len: 0
   clip_value: 0.8
-  intermediate_loss_weighting: 0.5
+  intermediate_loss_weighting: 0.0  # self_conditioning: false なので無効(念のため明示)
   random_seed: 552268
   dtype: bfloat16
