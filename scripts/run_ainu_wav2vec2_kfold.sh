@@ -18,20 +18,32 @@
 # ことも前提(なければ scripts/run_ainu_kfold.sh 側で作成される)。
 #
 # Usage:
-#   bash scripts/run_ainu_wav2vec2_kfold.sh [N_FOLDS]
+#   bash scripts/run_ainu_wav2vec2_kfold.sh [N_FOLDS] [START_FOLD]
+#
+# START_FOLD(省略時0)を指定すると、そのfoldから再開する(configの再生成は
+# 常に行う。既存のconfigファイルは上書きされるだけで、それ以前のfoldの
+# 学習済みチェックポイント/test_predictions.jsonはそのまま)。長時間ジョブが
+# 途中のfoldでクラッシュ(例: GPUメモリ断片化によるOOM)した場合に、
+# 完了済みfoldを再学習せずに再開するために使う。
 
 set -euo pipefail
 
 export PATH="$HOME/.local/bin:$PATH"  # uv がログインシェル経由でないと PATH に無いことがある
+# PyTorchのキャッシュアロケータが可変長シーケンス(条件Aの発話単位バッチは
+# 長さが毎回違う)で断片化し、"reserved but unallocated"が積み上がって
+# 十分な空きがあるはずなのにOOMする事象がfold2で発生したための対策
+# (PyTorch公式ドキュメント推奨)。
+export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 
 N_FOLDS="${1:-5}"
+START_FOLD="${2:-0}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 echo "=== generating configs for $N_FOLDS folds ==="
 uv run --extra gpu python scripts/generate_kfold_configs_wav2vec2.py --n-folds "$N_FOLDS"
 
-for fold in $(seq 0 $((N_FOLDS - 1))); do
+for fold in $(seq "$START_FOLD" $((N_FOLDS - 1))); do
   echo
   echo "############################################"
   echo "# fold $fold / $((N_FOLDS - 1))"
