@@ -18,13 +18,20 @@
 # ことも前提(なければ scripts/run_ainu_kfold.sh 側で作成される)。
 #
 # Usage:
-#   bash scripts/run_ainu_wav2vec2_kfold.sh [N_FOLDS] [START_FOLD]
+#   bash scripts/run_ainu_wav2vec2_kfold.sh [N_FOLDS] [START_FOLD] [BASE_MODEL] [NAME_PREFIX]
 #
 # START_FOLD(省略時0)を指定すると、そのfoldから再開する(configの再生成は
 # 常に行う。既存のconfigファイルは上書きされるだけで、それ以前のfoldの
 # 学習済みチェックポイント/test_predictions.jsonはそのまま)。長時間ジョブが
 # 途中のfoldでクラッシュ(例: GPUメモリ断片化によるOOM)した場合に、
 # 完了済みfoldを再学習せずに再開するために使う。
+#
+# BASE_MODEL/NAME_PREFIX(省略時は実験⑤のkarolモデル)を変えると、同じ
+# アーキテクチャ(wav2vec2-large系, hidden_size 1024・24層)の別の事前学習
+# 済みモデルでも同じ手順を再利用できる。例(実験⑥, facebook/wav2vec2-xls-r-300m):
+#   bash scripts/run_ainu_wav2vec2_kfold.sh 5 0 facebook/wav2vec2-xls-r-300m ainu_xlsr300m
+# この場合、exp/configs/ainu_xlsr300m_{short,long}.yaml が存在すること
+# (model.base_model が対応するBASE_MODELになっている必要がある)。
 
 set -euo pipefail
 
@@ -37,11 +44,18 @@ export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 
 N_FOLDS="${1:-5}"
 START_FOLD="${2:-0}"
+BASE_MODEL="${3:-karolnowakowski/wav2vec2-large-xlsr-53-pretrain-ain}"
+PREFIX="${4:-ainu_wav2vec2}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
-echo "=== generating configs for $N_FOLDS folds ==="
-uv run --extra gpu python scripts/generate_kfold_configs_wav2vec2.py --n-folds "$N_FOLDS"
+echo "=== generating configs for $N_FOLDS folds (prefix=$PREFIX) ==="
+uv run --extra gpu python scripts/generate_kfold_configs_wav2vec2.py \
+  --n-folds "$N_FOLDS" \
+  --short-template "exp/configs/${PREFIX}_short.yaml" \
+  --long-template  "exp/configs/${PREFIX}_long.yaml" \
+  --output-dir     "exp/configs/${PREFIX}_kfold" \
+  --name-prefix    "$PREFIX"
 
 for fold in $(seq "$START_FOLD" $((N_FOLDS - 1))); do
   echo
@@ -58,43 +72,48 @@ for fold in $(seq "$START_FOLD" $((N_FOLDS - 1))); do
   echo "--- [$fold] prepare_ainu_wav2vec2_utterances.py (条件A, 発話単位) ---"
   uv run --extra gpu python scripts/prepare_ainu_wav2vec2_utterances.py \
     --corpus-dir ainu_corpus \
-    --feat-dir   "ainu_w2v2_kfold_utterance_processed/fold${fold}" \
-    --output-dir "data/ainu_wav2vec2_kfold_utterances/fold${fold}" \
+    --feat-dir   "${PREFIX}_kfold_utterance_processed/fold${fold}" \
+    --output-dir "data/${PREFIX}_kfold_utterances/fold${fold}" \
+    --base-model "$BASE_MODEL" \
     --fold "$fold"
 
   echo "--- [$fold] prepare_ainu_wav2vec2_longcontext.py (条件B, コレクション連結) ---"
   uv run --extra gpu python scripts/prepare_ainu_wav2vec2_longcontext.py \
     --corpus-dir ainu_corpus \
-    --feat-dir   "ainu_w2v2_kfold_processed/fold${fold}" \
-    --output-dir "data/ainu_wav2vec2_kfold_collections/fold${fold}" \
+    --feat-dir   "${PREFIX}_kfold_processed/fold${fold}" \
+    --output-dir "data/${PREFIX}_kfold_collections/fold${fold}" \
+    --base-model "$BASE_MODEL" \
     --fold "$fold"
 
   echo "--- [$fold] train 条件A (short) ---"
-  uv run --extra gpu python exp/train.py --config "exp/configs/ainu_wav2vec2_kfold/fold${fold}_short.yaml"
+  uv run --extra gpu python exp/train.py --config "exp/configs/${PREFIX}_kfold/fold${fold}_short.yaml"
 
   echo "--- [$fold] train 条件B (long) ---"
-  uv run --extra gpu python exp/train.py --config "exp/configs/ainu_wav2vec2_kfold/fold${fold}_long.yaml"
+  uv run --extra gpu python exp/train.py --config "exp/configs/${PREFIX}_kfold/fold${fold}_long.yaml"
 
-  SHORT_CKPT_DIR="checkpoints/ainu_wav2vec2_kfold/fold${fold}_short"
-  LONG_CKPT_DIR="checkpoints/ainu_wav2vec2_kfold/fold${fold}_long"
+  SHORT_CKPT_DIR="checkpoints/${PREFIX}_kfold/fold${fold}_short"
+  LONG_CKPT_DIR="checkpoints/${PREFIX}_kfold/fold${fold}_long"
   SHORT_LAST_CKPT="$(ls -t "$SHORT_CKPT_DIR"/step_*.pt | head -1)"
   LONG_LAST_CKPT="$(ls -t "$LONG_CKPT_DIR"/step_*.pt | head -1)"
 
   echo "--- [$fold] eval 条件A short (checkpoint: $SHORT_LAST_CKPT) ---"
   uv run --extra gpu python scripts/eval_ainu_lcasr.py \
     --checkpoint "$SHORT_LAST_CKPT" \
-    --mapping    "data/ainu_wav2vec2_kfold_utterances/fold${fold}/test_mapping.json" \
+    --mapping    "data/${PREFIX}_kfold_utterances/fold${fold}/test_mapping.json" \
     --tokenizer  "$TOKENIZER" \
     --output     "$SHORT_CKPT_DIR/test_predictions.json"
 
   echo "--- [$fold] eval 条件B long (checkpoint: $LONG_LAST_CKPT) ---"
   uv run --extra gpu python scripts/eval_ainu_lcasr.py \
     --checkpoint "$LONG_LAST_CKPT" \
-    --mapping    "data/ainu_wav2vec2_kfold_collections/fold${fold}/test_mapping.json" \
+    --mapping    "data/${PREFIX}_kfold_collections/fold${fold}/test_mapping.json" \
     --tokenizer  "$TOKENIZER" \
     --output     "$LONG_CKPT_DIR/test_predictions.json"
+
+  echo "--- [$fold] disk cleanup: drop intermediate checkpoints, keep test_predictions.json ---"
+  find "$SHORT_CKPT_DIR" "$LONG_CKPT_DIR" -name "step_*.pt" -delete
 done
 
 echo
 echo "=== aggregating all $N_FOLDS folds ==="
-uv run --extra gpu python scripts/aggregate_kfold_results.py --checkpoints-dir checkpoints/ainu_wav2vec2_kfold --n-folds "$N_FOLDS"
+uv run --extra gpu python scripts/aggregate_kfold_results.py --checkpoints-dir "checkpoints/${PREFIX}_kfold" --n-folds "$N_FOLDS"

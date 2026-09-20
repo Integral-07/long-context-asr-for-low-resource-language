@@ -1,0 +1,57 @@
+model_class: 'Wav2Vec2CTCLongContext'
+
+# 実験⑥: facebook/wav2vec2-xls-r-300m(アイヌ語に特化しない多言語事前学習、
+# 128言語・約436千時間)をベースモデルにした実験⑤の再現。アーキテクチャは
+# karolnowakowski/wav2vec2-large-xlsr-53-pretrain-ain(実験⑤)と完全に同一
+# (conv構成・hidden_size 1024・24層・16ヘッド・feat_extract_norm/
+# do_stable_layer_norm を実機で確認済み)なので、lcasr/models/wav2vec2_longcontext.py
+# やデータ準備スクリプトは無改造でそのまま使える。base_modelだけが違う。
+
+model:
+  base_model: 'facebook/wav2vec2-xls-r-300m'
+  decoder_norm: true
+  self_conditioning: true  # 実験⑤での知見(無効化するとmode collapseに陥る)を踏襲
+  attn_implementation: 'sdpa'
+  subsampling_factor: 1
+  text_hop_length: 320
+
+optimizer:
+  name: 'adamw'
+  args:
+    lr: 3e-4
+
+scheduler:
+  warmup_steps: 200
+
+# 1536 frames = 30.72s @ 50Hz。実験⑤条件Aと同一(sequence_schedulerなし=
+# 「事前学習済みモデル + 従来手法・長文脈なし」)。
+audio_chunking:
+  size: 1536
+  overlap: 0
+
+wandb:
+  use: false
+  project_name: "ainu_xlsr300m_short"
+  name: "ainu-xlsr300m-short-context"
+  id: ""
+  update_config_with_wandb_id: false
+
+checkpointing:
+  dir: /home/t23cs033/long-context-asr/checkpoints/ainu_xlsr300m_short
+  save_every_n_steps: 2000
+
+data:
+  path: /home/t23cs033/long-context-asr/data/ainu_xlsr300m_longcontext_utterances/train_mapping.json
+
+training:
+  tokenizer_path: /home/t23cs033/long-context-asr/lcasr/artifacts/ainu/tokenizer.model
+  start_spec_augment_after_n_epochs: -1
+  max_epochs: 30
+  batch_size: 8
+  backprop_every: 1
+  backwards_every: 1
+  max_seq_len: 0
+  clip_value: 0.8
+  intermediate_loss_weighting: 0.5
+  random_seed: 552268
+  dtype: bfloat16

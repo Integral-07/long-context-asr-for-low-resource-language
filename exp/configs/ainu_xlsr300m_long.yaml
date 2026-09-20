@@ -1,0 +1,64 @@
+model_class: 'Wav2Vec2CTCLongContext'
+
+# 実験⑥条件B。ainu_xlsr300m_short.yaml(条件A)と対。モデル・データソース・
+# トークナイザ・学習レシピは完全に同一で、違いは audio_chunking /
+# sequence_scheduler のみ(実験⑤の比較設計を踏襲)。
+
+model:
+  base_model: 'facebook/wav2vec2-xls-r-300m'
+  decoder_norm: true
+  self_conditioning: true
+  attn_implementation: 'sdpa'
+  use_rotary: false
+  subsampling_factor: 1
+  text_hop_length: 320
+
+optimizer:
+  name: 'adamw'
+  args:
+    lr: 3e-4
+
+scheduler:
+  warmup_steps: 200
+
+# 256フレーム(5.12秒)から8192フレーム(約2.73分)まで段階的に伸ばす。
+# 実験⑤条件Bと同一。
+audio_chunking:
+  size: 256
+  overlap: 0
+
+sequence_scheduler:
+  increase_every: 200
+  stop_after: 999999
+  start_after: 0
+  max_sequence_length: 8192
+  increase_by_multiplier: 2
+  batch_size_multiplier: 0.5
+  interpolate_rotary: false
+
+wandb:
+  use: false
+  project_name: "ainu_xlsr300m_long"
+  name: "ainu-xlsr300m-long-context"
+  id: ""
+  update_config_with_wandb_id: false
+
+checkpointing:
+  dir: /home/t23cs033/long-context-asr/checkpoints/ainu_xlsr300m_long
+  save_every_n_steps: 150
+
+data:
+  path: /home/t23cs033/long-context-asr/data/ainu_xlsr300m_longcontext_collections/train_mapping.json
+
+training:
+  tokenizer_path: /home/t23cs033/long-context-asr/lcasr/artifacts/ainu/tokenizer.model
+  start_spec_augment_after_n_epochs: -1
+  max_epochs: 30
+  batch_size: 4
+  backprop_every: 1
+  backwards_every: 1
+  max_seq_len: 0
+  clip_value: 0.8
+  intermediate_loss_weighting: 0.5
+  random_seed: 552268
+  dtype: bfloat16

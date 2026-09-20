@@ -55,11 +55,16 @@ def main():
     parser.add_argument('--short-template', default='exp/configs/ainu_wav2vec2_short.yaml')
     parser.add_argument('--long-template', default='exp/configs/ainu_wav2vec2_long.yaml')
     parser.add_argument('--output-dir', default='exp/configs/ainu_wav2vec2_kfold')
+    parser.add_argument('--name-prefix', default='ainu_wav2vec2',
+                        help='data/checkpoints/wandbのfold別パスに使う接頭辞。'
+                             'ベースモデルが違う実験(例: 実験⑥は ainu_xlsr300m)では、'
+                             'data/ainu_wav2vec2_kfold_*を上書きしないよう変更すること。')
     parser.add_argument('--n-folds', type=int, default=None,
                         help='省略時は ainu_kfold_splits.N_FOLDS を使う')
     parser.add_argument('--remote-root', default='/home/t23cs033/long-context-asr',
                         help='data/checkpoints/tokenizerの絶対パスの起点(学習を実行するホスト上のパス)')
     args = parser.parse_args()
+    prefix = args.name_prefix
 
     import sys
     sys.path.insert(0, str(Path(__file__).parent))
@@ -76,11 +81,11 @@ def main():
     for fold in range(n_folds):
         # --- short (条件A, 発話単位) ---
         cfg = copy.deepcopy(short_template)
-        cfg['data']['path'] = f'{root}/data/ainu_wav2vec2_kfold_utterances/fold{fold}/train_mapping.json'
-        cfg['checkpointing']['dir'] = f'{root}/checkpoints/ainu_wav2vec2_kfold/fold{fold}_short'
+        cfg['data']['path'] = f'{root}/data/{prefix}_kfold_utterances/fold{fold}/train_mapping.json'
+        cfg['checkpointing']['dir'] = f'{root}/checkpoints/{prefix}_kfold/fold{fold}_short'
         cfg['training']['tokenizer_path'] = f'{root}/lcasr/artifacts/ainu_kfold/fold{fold}/tokenizer.model'
-        cfg['wandb']['project_name'] = f'ainu_wav2vec2_kfold_fold{fold}_short'
-        cfg['wandb']['name'] = f'ainu-wav2vec2-kfold-fold{fold}-short'
+        cfg['wandb']['project_name'] = f'{prefix}_kfold_fold{fold}_short'
+        cfg['wandb']['name'] = f'{prefix}-kfold-fold{fold}-short'
         out_path = output_dir / f'fold{fold}_short.yaml'
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(HEADER.format(fold=fold))
@@ -89,11 +94,11 @@ def main():
 
         # --- long (条件B, コレクション連結) ---
         cfg = copy.deepcopy(long_template)
-        cfg['data']['path'] = f'{root}/data/ainu_wav2vec2_kfold_collections/fold{fold}/train_mapping.json'
-        cfg['checkpointing']['dir'] = f'{root}/checkpoints/ainu_wav2vec2_kfold/fold{fold}_long'
+        cfg['data']['path'] = f'{root}/data/{prefix}_kfold_collections/fold{fold}/train_mapping.json'
+        cfg['checkpointing']['dir'] = f'{root}/checkpoints/{prefix}_kfold/fold{fold}_long'
         cfg['training']['tokenizer_path'] = f'{root}/lcasr/artifacts/ainu_kfold/fold{fold}/tokenizer.model'
-        cfg['wandb']['project_name'] = f'ainu_wav2vec2_kfold_fold{fold}_long'
-        cfg['wandb']['name'] = f'ainu-wav2vec2-kfold-fold{fold}-long'
+        cfg['wandb']['project_name'] = f'{prefix}_kfold_fold{fold}_long'
+        cfg['wandb']['name'] = f'{prefix}-kfold-fold{fold}-long'
         out_path = output_dir / f'fold{fold}_long.yaml'
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(HEADER.format(fold=fold))
