@@ -257,15 +257,25 @@ def train(
                     
                     cur_probs = out['final_posteriors']
                     B,N,C = cur_probs.shape
-                    loss = ctc_loss_fn(cur_probs.transpose(0,1), txt, out['length'], t_lengths).sum()
+                    final_loss = ctc_loss_fn(cur_probs.transpose(0,1), txt, out['length'], t_lengths).sum()
+                    loss = final_loss
 
                     inter_weight = args.config['training'].get('intermediate_loss_weighting', 0.0)
+                    inter_loss_sum = torch.zeros_like(final_loss)
                     if inter_weight > 0.0:
                         for inter_post in out.get('interim_posteriors', []):
                             inter_log = torch.log(inter_post.clamp(min=1e-8))
                             inter_loss = ctc_loss_fn(inter_log.transpose(0,1), txt, out['length'], t_lengths).sum()
                             if torch.isfinite(inter_loss):
                                 loss = loss + inter_weight * inter_loss
+                                inter_loss_sum = inter_loss_sum + inter_weight * inter_loss
+
+                    # 一時的な診断用出力(自己条件付けが最終lossに対してどれだけの
+                    # 割合を占めているか実測するため)。学習の挙動自体は変えない。
+                    if args.config['training'].get('debug_loss_breakdown', False):
+                        print(f'[loss breakdown] final={final_loss.item():.2f} '
+                              f'intermediate_sum={inter_loss_sum.item():.2f} '
+                              f'ratio={(inter_loss_sum.item() / max(final_loss.item(), 1e-8)):.3f}')
                     
                 blank_prob = blank_p(cur_probs.detach(), dataloader.tokenizer)
                 # check for non-finite loss before it can corrupt trainable weights
