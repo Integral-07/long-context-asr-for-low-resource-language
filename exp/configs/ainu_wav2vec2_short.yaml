@@ -25,7 +25,13 @@ model:
 optimizer:
   name: 'adamw'
   args:
-    lr: 3e-4
+    # 3e-4(実験①のHF Trainerレシピを流用)だとfold0/fold3でepoch8-9以降
+    # 訓練が崩れて回復しきれない不安定性が再現した。debug_loss_breakdown
+    # で実測した通り自己条件付き中間lossの合計が最終lossの約12倍あり、
+    # 同程度の事前学習済みモデルで自己条件付けなし・単一lossの実験①
+    # (3e-4で安定)と実効的な更新幅を揃えるため1/10に下げた。fold0単体で
+    # 30エポック通して安定することを確認済み(RESULT.md参照)。
+    lr: 3e-5
 
 scheduler:
   warmup_steps: 200

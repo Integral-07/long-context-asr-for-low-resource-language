@@ -26,7 +26,8 @@ model:
 optimizer:
   name: 'adamw'
   args:
-    lr: 3e-4
+    # 条件A(ainu_wav2vec2_short.yaml)と揃える。理由はそちらのコメント参照。
+    lr: 3e-5
 
 scheduler:
   warmup_steps: 200
