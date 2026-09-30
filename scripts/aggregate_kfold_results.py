@@ -110,17 +110,47 @@ def exact_sign_test(counts_a, counts_b, keys, label=''):
     print()
 
 
+def print_per_fold_breakdown(fold_counts, label=''):
+    """fold_counts: {fold_idx: (short_counts, long_counts)}。各foldのpooled WERと
+    差分を表示し、foldごとの偏り(不安定な学習の疑い等)を確認しやすくする。"""
+    print(f'--- {label}: fold別内訳 ---')
+    print(f'{"fold":>4s} {"n_coll":>7s} {"short":>8s} {"long":>8s} {"diff":>9s}')
+    for fold in sorted(fold_counts):
+        short_counts, long_counts = fold_counts[fold]
+        keys = sorted(set(short_counts) & set(long_counts))
+        wer_s = pooled_wer(short_counts, keys) * 100
+        wer_l = pooled_wer(long_counts, keys) * 100
+        print(f'{fold:>4d} {len(keys):>7d} {wer_s:>7.2f}% {wer_l:>7.2f}% {wer_l - wer_s:>+8.2f}pt')
+    print()
+
+    print(f'--- {label}: コレクション別内訳(diff=long-short 昇順) ---')
+    print(f'{"fold":>4s} {"id":8s} {"short":>8s} {"long":>8s} {"diff":>9s}')
+    rows = []
+    for fold in sorted(fold_counts):
+        short_counts, long_counts = fold_counts[fold]
+        for cid in sorted(set(short_counts) & set(long_counts)):
+            wer_s = short_counts[cid][0] / short_counts[cid][1] * 100 if short_counts[cid][1] else float('nan')
+            wer_l = long_counts[cid][0] / long_counts[cid][1] * 100 if long_counts[cid][1] else float('nan')
+            rows.append((fold, cid, wer_s, wer_l, wer_l - wer_s))
+    for fold, cid, wer_s, wer_l, diff in sorted(rows, key=lambda r: r[4]):
+        print(f'{fold:>4d} {cid:8s} {wer_s:>7.2f}% {wer_l:>7.2f}% {diff:>+8.2f}pt')
+    print()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--checkpoints-dir', default='checkpoints/ainu_kfold')
     parser.add_argument('--n-folds', type=int, required=True)
     parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument('--per-fold', action='store_true',
+                        help='fold別・コレクション別のWER内訳も表示する')
     args = parser.parse_args()
     random.seed(args.seed)
 
     ckpt_dir = Path(args.checkpoints_dir)
     short_counts, long_counts = {}, {}
+    fold_counts = {}
     missing = []
 
     for fold in range(args.n_folds):
@@ -144,6 +174,7 @@ def main():
 
         short_counts.update(fold_short)
         long_counts.update(fold_long)
+        fold_counts[fold] = (fold_short, fold_long)
 
     if missing:
         print('見つからなかった test_predictions.json:')
@@ -160,6 +191,9 @@ def main():
                       label='② scratch-short vs ③ scratch-long (k-fold全体)')
     exact_sign_test(short_counts, long_counts, common,
                     label='② vs ③ (k-fold全体)')
+
+    if args.per_fold:
+        print_per_fold_breakdown(fold_counts, label='② vs ③')
 
 
 if __name__ == '__main__':
