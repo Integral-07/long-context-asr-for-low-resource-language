@@ -52,7 +52,13 @@ def main():
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--corpus-dir', default='ainu_corpus')
     parser.add_argument('--save-dir', required=True)
-    parser.add_argument('--vocab-size', type=int, default=500)
+    parser.add_argument('--vocab-size', type=int, default=500,
+                        help='--model-type char では無視され、train splitの実際の文字種数'
+                             '+3(pad/unk/bos)から自動算出される(SentencePieceのchar'
+                             'モードはvocab_sizeが実際の文字種数を超えるとエラーになるため)。')
+    parser.add_argument('--model-type', default='bpe', choices=['bpe', 'char'],
+                        help='bpe: 従来のSentencePiece BPE(実験②③⑤⑥と同じ)。'
+                             'char: 文字レベルトークナイザ(実験①相当、タスク#2の仮説検証用)。')
     parser.add_argument('--raw-txt-path', default=None,
                         help='学習に使う結合テキストの一時保存先(省略時は save-dir 内)')
     parser.add_argument('--fold', type=int, default=None,
@@ -82,10 +88,23 @@ def main():
 
     print(f'train text: {n_lines} lines -> {raw_txt_path}')
 
+    vocab_size = args.vocab_size
+    if args.model_type == 'char':
+        # SentencePieceのcharモードはvocab_sizeが実際の文字種数+特殊トークン数を
+        # 超えるとエラーになる(bpeと違い未使用分を埋める結合ができないため)。
+        # train splitの実測文字種数から自動算出する(pad/unk/bosの3つを予約、
+        # eos_id=-1で無効化済み)。
+        chars = set()
+        for line in raw_txt_path.read_text(encoding='utf-8').splitlines():
+            chars.update(line)
+        vocab_size = len(chars) + 3
+        print(f'model-type=char: {len(chars)} unique chars -> vocab_size={vocab_size} (auto, --vocab-size={args.vocab_size} は無視)')
+
     train_tokenizer(
         raw_txt=str(raw_txt_path),
         save_path=str(save_dir) + '/',
-        vocab_size=args.vocab_size,
+        vocab_size=vocab_size,
+        model_type=args.model_type,
     )
     print(f'tokenizer saved under {save_dir}/ (tokenizer.model, tokenizer.vocab)')
 

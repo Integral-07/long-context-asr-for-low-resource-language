@@ -177,12 +177,13 @@ def train_tokenizer(
         raw_txt:str = '/mnt/parscratch/users/acp21rjf/spotify/all_text.txt',
         save_path:str = '/mnt/parscratch/users/acp21rjf/spotify/',
         vocab_size:int = 4095,
+        model_type:str = 'bpe',
     ):
     spm.SentencePieceTrainer.train(
         input=raw_txt,
         model_prefix='tokenizer',
         vocab_size=vocab_size,
-        model_type='bpe',
+        model_type=model_type,
         character_coverage=1.0,
         max_sentence_length=1000000, #
         pad_id=0,
