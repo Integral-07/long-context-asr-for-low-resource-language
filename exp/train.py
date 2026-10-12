@@ -88,6 +88,7 @@ def apply_augmentation(audio, lengths, augmentation, epoch, start_augment_after_
 def evaluate_dev_wer(args, model, tokenizer, decoder, dev_path, device):
     """dev_path(mapping.json)でWERを計算する。scripts/eval_ainu_lcasr.pyのロジックを移植。"""
     model.eval()
+    model.device = device  # fetch_logits()がmodel.deviceを直接参照する(eval_ainu_lcasr.pyと同じ)
     mapping = json.loads(Path(dev_path).read_text(encoding='utf-8'))
     ids = sorted(mapping.keys())
 
