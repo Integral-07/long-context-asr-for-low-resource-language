@@ -121,8 +121,12 @@ def save_model(
         seen_ids:List[int]=[],
         epoch:int=0,
         other:Dict={},
+        save_path:str=None,
     ):
-    save_path = os.path.join(config['checkpointing']['dir'], f'step_{podcast_step}.pt')
+    if save_path is None:
+        save_path = os.path.join(config['checkpointing']['dir'], f'step_{podcast_step}.pt')
+    else:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
     save_dict = {
         'model':model.state_dict(),
         'optimizer':optimizer.state_dict(),

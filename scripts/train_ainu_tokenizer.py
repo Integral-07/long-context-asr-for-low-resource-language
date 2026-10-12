@@ -32,7 +32,7 @@ from pathlib import Path
 from lcasr.utils.audio_tools import train_tokenizer
 
 from prepare_ainu import parse_transcript
-from ainu_kfold_splits import fold_for as _kfold_fold_for
+from ainu_kfold_splits import fold_for as _kfold_fold_for, dev_for as _kfold_dev_for
 
 ID_RE = re.compile(r'^([A-Za-z]+\d+)$')
 
@@ -43,7 +43,7 @@ DEV_COLLECTIONS = {'at54', 'at18', 'at27', 'at36', 'at10'}
 
 def is_heldout(collection_id: str, fold: int | None) -> bool:
     if fold is not None:
-        return _kfold_fold_for(collection_id) == fold
+        return _kfold_fold_for(collection_id) == fold or _kfold_dev_for(collection_id, fold)
     return collection_id in TEST_COLLECTIONS or collection_id in DEV_COLLECTIONS
 
 

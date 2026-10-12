@@ -61,8 +61,9 @@ def main():
     parser.add_argument('--max-duration-seconds', type=float, default=30.0,
                         help='これより長い発話は除外する(実験1のwav2vec2ベースラインと揃えた外れ値対策)')
     parser.add_argument('--fold', type=int, default=None,
-                        help='指定するとk-fold交差検証モード(train/testのみ、devなし)。'
-                             '0..ainu_kfold_splits.N_FOLDS-1 のfold番号をtestとして使う。')
+                        help='指定するとk-fold交差検証モード。'
+                             '0..ainu_kfold_splits.N_FOLDS-1 のfold番号をtestとして使う'
+                             '(devはtrain側から自動的に切り出される)。')
     args = parser.parse_args()
 
     corpus_dir = Path(args.corpus_dir)
@@ -73,7 +74,7 @@ def main():
     spec_dir.mkdir(parents=True, exist_ok=True)
     txt_dir.mkdir(parents=True, exist_ok=True)
 
-    split_names = ('train', 'test') if args.fold is not None else ('train', 'dev', 'test')
+    split_names = ('train', 'dev', 'test')
     get_split = (lambda cid: kfold_split_for(cid, args.fold)) if args.fold is not None else split_for
 
     trans_files = sorted(transcripts_dir.glob('at*.trans.txt'))

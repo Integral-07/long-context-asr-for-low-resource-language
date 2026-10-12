@@ -101,6 +101,7 @@ def main():
         # --- short (条件A, 発話単位) ---
         cfg = copy.deepcopy(short_template)
         cfg['data']['path'] = f'{root}/data/{data_prefix}_kfold_utterances/fold{fold}/train_mapping.json'
+        cfg['data']['dev_path'] = f'{root}/data/{data_prefix}_kfold_utterances/fold{fold}/dev_mapping.json'
         cfg['checkpointing']['dir'] = f'{root}/checkpoints/{prefix}_kfold/fold{fold}_short'
         cfg['training']['tokenizer_path'] = f'{root}/lcasr/artifacts/{tokenizer_subdir}/fold{fold}/tokenizer.model'
         cfg['wandb']['project_name'] = f'{prefix}_kfold_fold{fold}_short'
@@ -114,6 +115,7 @@ def main():
         # --- long (条件B, コレクション連結) ---
         cfg = copy.deepcopy(long_template)
         cfg['data']['path'] = f'{root}/data/{data_prefix}_kfold_collections/fold{fold}/train_mapping.json'
+        cfg['data']['dev_path'] = f'{root}/data/{data_prefix}_kfold_collections/fold{fold}/dev_mapping.json'
         cfg['checkpointing']['dir'] = f'{root}/checkpoints/{prefix}_kfold/fold{fold}_long'
         cfg['training']['tokenizer_path'] = f'{root}/lcasr/artifacts/{tokenizer_subdir}/fold{fold}/tokenizer.model'
         cfg['wandb']['project_name'] = f'{prefix}_kfold_fold{fold}_long'

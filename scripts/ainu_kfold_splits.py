@@ -27,8 +27,10 @@ at33 は書き起こしファイルが空(音声なし)のため、そもそも�
 """
 
 from pathlib import Path
+from typing import Dict, FrozenSet
 
 N_FOLDS = 5
+DEV_FRACTION = 0.10
 
 # corpus収録時間: at01..at54(at33を除く53コレクション)の実測秒数から
 # LPTヒューリスティックで算出した固定のfold割り当て。詳細は末尾を参照。
@@ -50,17 +52,35 @@ FOLD_ASSIGNMENT = {
 ALL_COLLECTIONS = frozenset(FOLD_ASSIGNMENT)
 
 
+# 各outer foldのtrain pool(他4fold)から、持続時間の約10%(DEV_FRACTION)を
+# LPT風に切り出したdevコレクション(fold_idx -> devコレクションIDの集合)。
+# outer foldのtest集合(FOLD_ASSIGNMENT)は変更しない — 変わるのは各foldの
+# train集合の内部だけ(train -> train' + dev)。再現用ロジックは末尾の
+# `_recompute_dev_assignment()` を参照。
+DEV_ASSIGNMENT: Dict[int, FrozenSet[str]] = {
+    0: frozenset({'at08', 'at43'}),
+    1: frozenset({'at43', 'at54'}),
+    2: frozenset({'at08', 'at54'}),
+    3: frozenset({'at08', 'at54'}),
+    4: frozenset({'at08', 'at54'}),
+}
+
+
 def fold_for(collection_id: str) -> int:
     """collection_id (例: 'at08') が属するfold番号(0..N_FOLDS-1)を返す。
     at33等、割り当てのないコレクションは呼び出し側でスキップすること。"""
     return FOLD_ASSIGNMENT[collection_id]
 
 
+def dev_for(collection_id: str, fold_idx: int) -> bool:
+    """collection_idが、fold_idxをtestとして使うときのdev集合に属するか。"""
+    return collection_id in DEV_ASSIGNMENT[fold_idx]
+
+
 def train_test_for_fold(fold_idx: int):
     """fold_idx をtestとして使うときの (train_ids, test_ids) を返す。
-    devは使わない(このリポジトリの学習ループはdevをearly stopping等に
-    使っておらず、testと役割が重複するだけなので、CVではtrain/testの
-    2分割に単純化している)。"""
+    train_idsにはdevも含む(従来の2分割インターフェースとの後方互換用)。
+    3-way分割が必要な呼び出し元は train_dev_test_for_fold() を使うこと。"""
     if not (0 <= fold_idx < N_FOLDS):
         raise ValueError(f'fold_idx must be in [0, {N_FOLDS}), got {fold_idx}')
     test_ids = {cid for cid, f in FOLD_ASSIGNMENT.items() if f == fold_idx}
@@ -68,15 +88,28 @@ def train_test_for_fold(fold_idx: int):
     return train_ids, test_ids
 
 
+def train_dev_test_for_fold(fold_idx: int):
+    """fold_idx をtestとして使うときの (train_ids, dev_ids, test_ids) を返す。
+    train_idsはdevを除いた純粋なtrain'集合。"""
+    train_ids, test_ids = train_test_for_fold(fold_idx)
+    dev_ids = set(DEV_ASSIGNMENT[fold_idx])
+    return train_ids - dev_ids, dev_ids, test_ids
+
+
 def split_for(collection_id: str, fold_idx: int) -> str:
     """prepare_ainu.py / prepare_ainu_utterances.py / train_ainu_tokenizer.py の
-    既存の split_for(collection_id) と同じインターフェースの、fold対応版。"""
-    return 'test' if fold_for(collection_id) == fold_idx else 'train'
+    既存の split_for(collection_id) と同じインターフェースの、fold対応版。
+    'train' / 'dev' / 'test' の3値を返す(test判定を最優先、次にdev判定)。"""
+    if fold_for(collection_id) == fold_idx:
+        return 'test'
+    if dev_for(collection_id, fold_idx):
+        return 'dev'
+    return 'train'
 
 
-def _recompute_fold_assignment(corpus_dir='ainu_corpus', k=N_FOLDS):
-    """FOLD_ASSIGNMENT を実測の音声長から再計算する(コーパスが変わった場合の再現用)。
-    通常の実行では呼ばれない。"""
+def _collection_durations(corpus_dir='ainu_corpus'):
+    """各コレクションの実測音声長(秒)を計算する共有ヘルパー。
+    _recompute_fold_assignment() と _recompute_dev_assignment() の両方で使う。"""
     import wave
     import contextlib
     from collections import defaultdict
@@ -98,7 +131,13 @@ def _recompute_fold_assignment(corpus_dir='ainu_corpus', k=N_FOLDS):
                     durations[cid] += f.getnframes() / float(f.getframerate())
             except Exception:
                 pass  # at37/at38 hold a couple of non-RIFF clips; duration slightly underestimated
+    return durations
 
+
+def _recompute_fold_assignment(corpus_dir='ainu_corpus', k=N_FOLDS):
+    """FOLD_ASSIGNMENT を実測の音声長から再計算する(コーパスが変わった場合の再現用)。
+    通常の実行では呼ばれない。"""
+    durations = _collection_durations(corpus_dir)
     ordered = sorted(durations.items(), key=lambda x: -x[1])  # longest first (LPT)
     fold_totals = [0.0] * k
     assignment = {}
@@ -109,11 +148,48 @@ def _recompute_fold_assignment(corpus_dir='ainu_corpus', k=N_FOLDS):
     return assignment
 
 
+def _dev_collections_for_fold(fold_idx, durations, target_frac=DEV_FRACTION):
+    """outer fold `fold_idx` のtrain pool(他4fold)を時間降順にソートし、
+    累積時間が train_total * target_frac に最も近づく時点で切って、その
+    先頭k件をdevにする(LPTスタイルを1段ネストさせた形)。"""
+    train_ids, _ = train_test_for_fold(fold_idx)
+    train_total = sum(durations[cid] for cid in train_ids)
+    target = train_total * target_frac
+
+    ordered = sorted(train_ids, key=lambda cid: -durations[cid])
+    best_k, best_diff, cum = 0, target, 0.0
+    for k, cid in enumerate(ordered, start=1):
+        cum += durations[cid]
+        diff = abs(cum - target)
+        if diff < best_diff:
+            best_diff = diff
+            best_k = k
+    return frozenset(ordered[:best_k])
+
+
+def _recompute_dev_assignment(corpus_dir='ainu_corpus', target_frac=DEV_FRACTION):
+    """DEV_ASSIGNMENT を実測の音声長から再計算する(コーパスが変わった場合の再現用)。
+    通常の実行では呼ばれない。FOLD_ASSIGNMENT(test集合)は固定のまま、各foldの
+    train poolだけを対象にdevを切り出す。"""
+    durations = _collection_durations(corpus_dir)
+    return {
+        fold_idx: _dev_collections_for_fold(fold_idx, durations, target_frac)
+        for fold_idx in range(N_FOLDS)
+    }
+
+
 if __name__ == '__main__':
-    # 再計算して現在の FOLD_ASSIGNMENT と一致するか確認するための簡易チェック。
-    recomputed = _recompute_fold_assignment()
-    if recomputed == FOLD_ASSIGNMENT:
+    # 再計算して現在の FOLD_ASSIGNMENT / DEV_ASSIGNMENT と一致するか確認する簡易チェック。
+    recomputed_folds = _recompute_fold_assignment()
+    if recomputed_folds == FOLD_ASSIGNMENT:
         print('OK: FOLD_ASSIGNMENT matches recomputed assignment from ainu_corpus/')
     else:
         print('MISMATCH: FOLD_ASSIGNMENT is stale, recompute and update this file:')
-        print(recomputed)
+        print(recomputed_folds)
+
+    recomputed_dev = _recompute_dev_assignment()
+    if recomputed_dev == DEV_ASSIGNMENT:
+        print('OK: DEV_ASSIGNMENT matches recomputed assignment from ainu_corpus/')
+    else:
+        print('MISMATCH: DEV_ASSIGNMENT is stale, recompute and update this file:')
+        print(recomputed_dev)

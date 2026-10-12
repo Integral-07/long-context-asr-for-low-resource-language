@@ -3,11 +3,16 @@ from __future__ import annotations
 import lcasr
 import torch
 import argparse
+import json
+from pathlib import Path
+from pyctcdecode import build_ctcdecoder
 from tqdm import tqdm
 from typing import Dict, List, Tuple
 from lcasr.models.sconformer_xl import SCConformerXL
 from omegaconf.omegaconf import OmegaConf
 import traceback
+from lcasr.eval.utils import fetch_logits, decode_beams_lm
+from lcasr.eval.wer import word_error_rate_detail
 from lcasr.utils.dataloading import (
     reset_seen_ids,
 )
@@ -80,6 +85,33 @@ def apply_augmentation(audio, lengths, augmentation, epoch, start_augment_after_
         return augmentation(audio, lengths)
 
 
+def evaluate_dev_wer(args, model, tokenizer, decoder, dev_path, device):
+    """dev_path(mapping.json)でWERを計算する。scripts/eval_ainu_lcasr.pyのロジックを移植。"""
+    model.eval()
+    mapping = json.loads(Path(dev_path).read_text(encoding='utf-8'))
+    ids = sorted(mapping.keys())
+
+    hypotheses, references = [], []
+    with torch.no_grad():
+        for uid in ids:
+            entry = mapping[uid]
+            spec = torch.load(entry['audio'], map_location='cpu', weights_only=True).to(torch.float32)
+            words = json.loads(Path(entry['txt']).read_text(encoding='utf-8'))
+            reference = ' '.join(w['text'] for w in words)
+
+            logits = fetch_logits(args, model, spec, -1, 0, tokenizer, use_tqdm=False)
+            ds_factor = spec.shape[-1] / logits.shape[0]
+            decoded, _ = decode_beams_lm([logits], decoder, beam_width=1, ds_factor=ds_factor)
+            hypothesis = decoded[0]['text']
+
+            hypotheses.append(hypothesis)
+            references.append(reference)
+
+    wer, _, _, _, _ = word_error_rate_detail(hypotheses=hypotheses, references=references)
+    model.train()
+    return wer
+
+
 def get_dtype(dtype:str) -> torch.dtype:
     if dtype == 'bfloat16':
         return torch.bfloat16
@@ -132,6 +164,18 @@ def train(
     tokenizer = dataloader.tokenizer
     chunk_size, chunk_overlap = args.config.audio_chunking['size'], 0 # previously args.config.audio_chunking['overlap'] though this is not used anymore
 
+    dev_path = args.config['data'].get('dev_path', None)
+    dev_eval_enabled = dev_path is not None and os.path.exists(dev_path)
+    if dev_path is not None and not dev_eval_enabled:
+        print(f'WARNING: dev_path={dev_path} が見つかりません。dev評価/ベストチェックポイント保存をスキップします。')
+    dev_decoder, best_dev_wer, best_dev_dir, dev_eval_log_path = None, float('inf'), None, None
+    if dev_eval_enabled:
+        dev_vocab = [tokenizer.id_to_piece(i) for i in range(tokenizer.get_piece_size())] + ['']
+        dev_decoder = build_ctcdecoder(dev_vocab, kenlm_model_path=None, alpha=None, beta=None)
+        best_dev_dir = os.path.join(args.config['checkpointing']['dir'], 'best_dev')
+        os.makedirs(best_dev_dir, exist_ok=True)
+        dev_eval_log_path = os.path.join(best_dev_dir, 'dev_eval_log.jsonl')
+
     if exists(sequence_scheduler):
         chunk_size = sequence_scheduler.cur_sequence_length
         batch_size = sequence_scheduler.cur_batch_size
@@ -153,6 +197,27 @@ def train(
         except StopIteration:
             epoch += 1
             seen_ids = reset_seen_ids(seen_ids = seen_ids, epoch = epoch - 1)
+            if dev_eval_enabled:
+                torch.cuda.empty_cache()
+                dev_wer = evaluate_dev_wer(args, model, tokenizer, dev_decoder, dev_path, device)
+                torch.cuda.empty_cache()
+                with open(dev_eval_log_path, 'a') as f:
+                    f.write(json.dumps({'epoch': epoch - 1, 'step': cur_podcast, 'dev_wer': dev_wer}) + '\n')
+                print(f'[dev eval] epoch {epoch - 1}: dev_wer={dev_wer:.4f} (best so far: {best_dev_wer:.4f})')
+                if dev_wer < best_dev_wer:
+                    best_dev_wer = dev_wer
+                    save_model(
+                        model = model,
+                        optimizer = optimizer,
+                        scheduler = scheduler,
+                        podcast_step = cur_podcast,
+                        config = args.config,
+                        sequence_scheduler = sequence_scheduler,
+                        seen_ids = seen_ids,
+                        epoch = epoch - 1,
+                        other = {'dev_wer': dev_wer},
+                        save_path = os.path.join(best_dev_dir, 'best_dev.pt'),
+                    )
             if epoch >= max_epochs:
                 finished = True
             else:

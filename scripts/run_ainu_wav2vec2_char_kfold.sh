@@ -82,8 +82,18 @@ for fold in $(seq "$START_FOLD" $((N_FOLDS - 1))); do
 
   SHORT_CKPT_DIR="checkpoints/${PREFIX}_kfold/fold${fold}_short"
   LONG_CKPT_DIR="checkpoints/${PREFIX}_kfold/fold${fold}_long"
-  SHORT_LAST_CKPT="$(ls -t "$SHORT_CKPT_DIR"/step_*.pt | head -1)"
-  LONG_LAST_CKPT="$(ls -t "$LONG_CKPT_DIR"/step_*.pt | head -1)"
+  # dev評価によるベストエポック選択(best_dev/best_dev.pt)が有効な場合はそれを使う。
+  # 無ければ従来通り最新のstep_*.pt(devなしの既存configとの後方互換)。
+  if [ -f "$SHORT_CKPT_DIR/best_dev/best_dev.pt" ]; then
+    SHORT_LAST_CKPT="$SHORT_CKPT_DIR/best_dev/best_dev.pt"
+  else
+    SHORT_LAST_CKPT="$(ls -t "$SHORT_CKPT_DIR"/step_*.pt | head -1)"
+  fi
+  if [ -f "$LONG_CKPT_DIR/best_dev/best_dev.pt" ]; then
+    LONG_LAST_CKPT="$LONG_CKPT_DIR/best_dev/best_dev.pt"
+  else
+    LONG_LAST_CKPT="$(ls -t "$LONG_CKPT_DIR"/step_*.pt | head -1)"
+  fi
 
   echo "--- [$fold] eval 条件A short (checkpoint: $SHORT_LAST_CKPT) ---"
   uv run --extra gpu python scripts/eval_ainu_lcasr.py \

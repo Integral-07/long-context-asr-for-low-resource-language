@@ -77,8 +77,9 @@ def main():
                         help='train/dev/test それぞれの mapping.json を書き出すディレクトリ')
     parser.add_argument('--base-model', default='karolnowakowski/wav2vec2-large-xlsr-53-pretrain-ain')
     parser.add_argument('--fold', type=int, default=None,
-                        help='指定するとk-fold交差検証モード(train/testのみ、devなし)。'
-                             '0..ainu_kfold_splits.N_FOLDS-1 のfold番号をtestとして使う。')
+                        help='指定するとk-fold交差検証モード。'
+                             '0..ainu_kfold_splits.N_FOLDS-1 のfold番号をtestとして使う'
+                             '(devはtrain側から自動的に切り出される)。')
     args = parser.parse_args()
 
     from transformers import Wav2Vec2Model
@@ -101,7 +102,7 @@ def main():
     trans_files = sorted(transcripts_dir.glob('at*.trans.txt'))
     print(f'{len(trans_files)} collections found')
 
-    split_names = ('train', 'test') if args.fold is not None else ('train', 'dev', 'test')
+    split_names = ('train', 'dev', 'test')
     get_split = (lambda cid: kfold_split_for(cid, args.fold)) if args.fold is not None else split_for
 
     mappings = {name: {} for name in split_names}
