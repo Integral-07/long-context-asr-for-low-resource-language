@@ -13,6 +13,7 @@ __pycache__
 paths.yaml
 *.wav
 .claude/
+PROGRESS_LOG.md
 .~lock.*#
 symphony/.env
 .DS_Store

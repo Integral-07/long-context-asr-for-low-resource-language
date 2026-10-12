@@ -1,3 +1,30 @@
+# アイヌ語低資源ASRへの応用(このフォークについて)
+
+本リポジトリは、下記のInterspeech 2024論文のコード([arXiv:2310.15672](https://arxiv.org/abs/2310.15672))をフォークし、その長文脈アーキテクチャ(学習時に見せる音声の長さを段階的に伸ばすカリキュラム)が**低資源言語(アイヌ語)**のASRに有用かを検証する研究用に拡張したものです。
+
+## 目的
+
+論文の中心的主張(学習時の音声コンテキストを長くするとWERが改善する)は、Earnings-22/Tediumのような大規模データで確認されたもの。これが**低資源(train 7.5時間程度)**のアイヌ語コーパスでも再現するか、また事前学習の有無・種類とどう相互作用するかを検証する。
+
+## データ
+
+サハリンアイヌ「トゥイタハ集」(Tuytah Collection、浅井タケ氏口承文学、TUFSアーカイブ由来、約8.9時間)。`ainu_corpus/`に格納(音声本体を除きgit管理)。詳細は`scripts/prepare_ainu.py`とRESULT.mdのデータセクションを参照。
+
+## これまでの流れ(概要)
+
+1. **①** 事前学習済みwav2vec2-Ainu(234時間でアイヌ語継続事前学習済み)を従来手法(短い音声)でファインチューニング — test WER **31.47%**(全実験中最良)
+2. **②③** 論文アーキテクチャを0から、短文脈 vs 長文脈で比較 — 長文脈化で有意改善(k-fold, 41/53コレクション改善, p=0.0001)
+3. **④** ②③のk-fold交差検証(53コレクションheld-out)による統計的検証基盤の確立
+4. **⑤** 事前学習あり(karol wav2vec2-Ainu)+長文脈化のハイブリッド — 学習率の訓練不安定性を解消後、長文脈化が有意に改善(p≈0.0000)
+5. **⑥** アイヌ語未経験の多言語事前学習(XLS-R-300M)+長文脈化 — 対照的に一貫して有意に悪化(p≈0.0000)
+6. **⑦** 実験⑤と同条件でトークナイザのみ文字レベルに差し替えて再検証 — 長文脈化の効果自体はさらに拡大(-15.72pt)したが、**短文脈側が大幅に悪化(52.54%→71.51%)**し、「①との差はトークナイザが原因」という仮説は裏付けられなかった
+
+詳細な実験設定・結果は[`RESULT.md`](./RESULT.md)、調査過程・未解決の論点は[`INVESTIGATION.md`](./INVESTIGATION.md)、日々の進捗は`PROGRESS_LOG.md`(gitignore対象、ローカルのみ)を参照。
+
+---
+
+以下は元のupstreamリポジトリ(論文公式コード)のREADME。インストール方法・元データセット(Earnings-22/Tedlium等)・事前学習済みチェックポイントの説明。
+
 # Code for the paper: How Much Context Does My Attention-Based ASR System Need? (Interspeech 2024)
 ![figure 1.0 from paper](https://github.com/robflynnyh/long-context-asr/blob/main/eval/results/IS_paper/weracross_data.png)
 - Current Pre-Print accepted at Interspeech 2024 available on [arXiv](https://arxiv.org/abs/2310.15672) 
