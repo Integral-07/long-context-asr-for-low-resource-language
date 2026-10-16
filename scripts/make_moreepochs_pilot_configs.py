@@ -34,6 +34,9 @@ def main():
     )
     parser.add_argument('--src-dir', default='exp/configs/ainu_wav2vec2_kfold')
     parser.add_argument('--dst-dir', default='exp/configs/ainu_wav2vec2_moreepochs_pilot')
+    parser.add_argument('--ckpt-prefix', default='ainu_wav2vec2_moreepochs_pilot',
+                        help='checkpoints/<ckpt-prefix>/... に保存する。45epoch版等、別runのcheckpointと'
+                             '衝突しないよう--max-epochsごとに変える(例: ainu_wav2vec2_moreepochs_pilot60)')
     parser.add_argument('--folds', type=int, nargs='+', default=[0])
     parser.add_argument('--max-epochs', type=int, default=45)
     args = parser.parse_args()
@@ -52,7 +55,7 @@ def main():
             cfg['training']['max_epochs'] = args.max_epochs
 
             new_ckpt_dir = cfg['checkpointing']['dir'].replace(
-                'ainu_wav2vec2_kfold', 'ainu_wav2vec2_moreepochs_pilot')
+                'ainu_wav2vec2_kfold', args.ckpt_prefix)
             cfg['checkpointing']['dir'] = new_ckpt_dir
             cfg['training']['diagnostics_path'] = f'{new_ckpt_dir}/diagnostics.jsonl'
 

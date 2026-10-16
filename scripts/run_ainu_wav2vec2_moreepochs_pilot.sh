@@ -12,11 +12,12 @@
 # トークナイザ(lcasr/artifacts/ainu_kfold/fold0)は本番runのものを再利用する
 # (再生成不要)。
 #
-# 事前準備(このスクリプトの実行前に一度だけ):
-#   uv run --extra gpu python scripts/make_moreepochs_pilot_configs.py --folds 0 --max-epochs 45
+# 事前準備(このスクリプトの実行前に一度だけ、PILOT_PREFIXは--ckpt-prefixと揃える):
+#   uv run --extra gpu python scripts/make_moreepochs_pilot_configs.py --folds 0 --max-epochs 45 \
+#     --ckpt-prefix ainu_wav2vec2_moreepochs_pilot
 #
 # Usage:
-#   bash scripts/run_ainu_wav2vec2_moreepochs_pilot.sh [FOLD]
+#   bash scripts/run_ainu_wav2vec2_moreepochs_pilot.sh [FOLD] [PILOT_PREFIX]
 
 set -euo pipefail
 
@@ -25,7 +26,7 @@ export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 
 FOLD="${1:-0}"
 PREFIX="ainu_wav2vec2"
-PILOT_PREFIX="ainu_wav2vec2_moreepochs_pilot"
+PILOT_PREFIX="${2:-ainu_wav2vec2_moreepochs_pilot}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
