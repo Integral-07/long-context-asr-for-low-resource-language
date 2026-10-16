@@ -1,19 +1,25 @@
 #!/usr/bin/env python3
 """
-k-foldの駆動スクリプト(例: scripts/run_ainu_wav2vec2_bestepoch_kfold.sh)が吐く
+k-foldの駆動スクリプト(例: scripts/run_ainu_wav2vec2_kfold.sh)が吐く
 標準出力ログから、epoch境界ごとの dev WER 履歴を復元する。
 
-`exp/train.py` はdev分割使用時に `best_dev/dev_eval_log.jsonl` を書くが、
-checkpointディレクトリ丸ごと削除で容量を節約した場合そのログも消える
-(例: checkpoints/ainu_wav2vec2_bestepoch_kfold/ 配下は diagnostics.jsonl と
-test_predictions.json しか残っていない)。標準出力に出していた
+`exp/train.py` はdev分割使用時に `<checkpointing.dir>/best_dev/dev_eval_log.jsonl`
+を書く。通常はまずこれを直接見ればよい(例: 実験⑤公式/⑧本番runなら
+checkpoints/ainu_wav2vec2_kfold/fold{N}_{short,long}/best_dev/dev_eval_log.jsonl
+に残っている)。このスクリプトは、checkpointディレクトリ丸ごと削除などで
+そのログ自体が失われてしまった場合のフォールバックで、標準出力に出ていた
 
     --- [<fold>] train 条件A (short) ---
     --- [<fold>] train 条件B (long) ---
     [dev eval] epoch <E>: dev_wer=<W> (best so far: <B>)
 
-という行は駆動スクリプトのログファイル(nohup等でリダイレクトしたもの)に
-残っていることが多いので、それを再パースして復元する。
+という行を駆動スクリプトのログファイル(nohup等でリダイレクトしたもの)から
+再パースして復元する。
+
+【紛らわしい点】checkpoints/ainu_wav2vec2_bestepoch_kfold/ という似た名前の
+ディレクトリは、dev分割とは無関係の別実験(lr=3e-4でのepoch平均train loss
+最良選択、INVESTIGATION.mdタスク#9)用で、そもそもbest_devディレクトリを
+持たない。dev分割実験のログと混同しないこと。
 
 複数ログファイル(クラッシュ後にresumeして再実行した分)を時系列順に渡すと、
 同じ(fold, condition, epoch)は後に出てきた方で上書きする。
