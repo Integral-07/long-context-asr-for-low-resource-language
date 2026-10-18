@@ -1,0 +1,58 @@
+model_class: 'Wav2Vec2CTCLongContext'
+
+model:
+  base_model: 'karolnowakowski/wav2vec2-large-xlsr-53-pretrain-ain'
+  decoder_norm: true
+  # 実験⑪: self_conditioning: falseの再検証。9/19のアブレーション(aeffd99)は
+  # lr=3e-4(訓練不安定化前)時代に行われ、mode collapseに陥った。その後
+  # lr=3e-5への変更(e2ad8af)で自己条件付き版の訓練不安定性自体が解消しており、
+  # 「lr=3e-5 + self_conditioning: false」の組み合わせはまだ試していない。
+  # finetune_xlsr53_ainu(他メンバー、HF Trainer + 素のWav2Vec2ForCTC、
+  # 自己条件付けなし)が文字レベルトークナイザで良好な結果(test WER 31.47%)を
+  # 出していることから、自己条件付けの中間loss増幅が文字レベルトークナイザを
+  # 悪化させる原因だという仮説(RESULT.md/PROGRESS_LOG 10/08)を検証する。
+  self_conditioning: false
+  attn_implementation: 'sdpa'
+  subsampling_factor: 1
+  text_hop_length: 320
+
+optimizer:
+  name: 'adamw'
+  args:
+    # 条件A(ainu_wav2vec2_short.yaml、自己条件付きの公式lr)と揃える。
+    lr: 3e-5
+
+scheduler:
+  warmup_steps: 200
+
+audio_chunking:
+  size: 1536
+  overlap: 0
+
+wandb:
+  use: false
+  project_name: "ainu_wav2vec2_noselfcond_short"
+  name: "ainu-wav2vec2-noselfcond-short-context"
+  id: ""
+  update_config_with_wandb_id: false
+
+checkpointing:
+  dir: /home/t23cs033/long-context-asr/checkpoints/ainu_wav2vec2_noselfcond_short
+  save_every_n_steps: 2000
+
+data:
+  path: /home/t23cs033/long-context-asr/data/ainu_wav2vec2_longcontext_utterances/train_mapping.json
+
+training:
+  tokenizer_path: /home/t23cs033/long-context-asr/lcasr/artifacts/ainu/tokenizer.model
+  start_spec_augment_after_n_epochs: -1  # 未検証のため今回は無効化
+  max_epochs: 30
+  batch_size: 8
+  backprop_every: 1
+  backwards_every: 1
+  max_seq_len: 0
+  clip_value: 0.8
+  # self_conditioning: false なので無効(念のため明示、aeffd99と同じ扱い)
+  intermediate_loss_weighting: 0.0
+  random_seed: 552268
+  dtype: bfloat16
