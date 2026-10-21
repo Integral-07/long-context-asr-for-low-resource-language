@@ -20,6 +20,7 @@ from pyctcdecode import build_ctcdecoder
 from tqdm import tqdm
 
 import lcasr
+from lcasr.decoding.greedy import GreedyCTCDecoder
 from lcasr.eval.utils import fetch_logits, decode_beams_lm
 from lcasr.eval.wer import word_error_rate_detail
 from lcasr.utils.general import load_model, get_model_class
@@ -34,6 +35,10 @@ def main():
     parser.add_argument('--output', required=True)
     parser.add_argument('--seq-len', type=int, default=-1,
                         help='-1 でチェックポイントの audio_chunking.size を使用')
+    parser.add_argument('--decoder', default='pyctcdecode', choices=['pyctcdecode', 'greedy'],
+                        help='pyctcdecode: 既存のbeam_width=1デコード(既定)。'
+                             'greedy: 渡辺さんのnotebookと同じargmax greedyデコード'
+                             '(実験⑫、lcasr/decoding/greedy.py)')
     args = parser.parse_args()
 
     checkpoint = torch.load(args.checkpoint, map_location='cpu', weights_only=False)
@@ -52,8 +57,11 @@ def main():
     model = model.to(device)
     model.eval()
 
-    vocab = [tokenizer.id_to_piece(i) for i in range(tokenizer.get_piece_size())] + ['']
-    decoder = build_ctcdecoder(vocab, kenlm_model_path=None, alpha=None, beta=None)
+    if args.decoder == 'greedy':
+        decoder = GreedyCTCDecoder(tokenizer=tokenizer, blank_id=model.decoder.num_classes-1)
+    else:
+        vocab = [tokenizer.id_to_piece(i) for i in range(tokenizer.get_piece_size())] + ['']
+        decoder = build_ctcdecoder(vocab, kenlm_model_path=None, alpha=None, beta=None)
 
     mapping = json.loads(Path(args.mapping).read_text(encoding='utf-8'))
     ids = sorted(mapping.keys())
@@ -68,9 +76,12 @@ def main():
             reference = ' '.join(w['text'] for w in words)
 
             logits = fetch_logits(args, model, spec, args.seq_len, 0, tokenizer, use_tqdm=False)
-            ds_factor = spec.shape[-1] / logits.shape[0]
-            decoded, _ = decode_beams_lm([logits], decoder, beam_width=1, ds_factor=ds_factor)
-            hypothesis = decoded[0]['text']
+            if args.decoder == 'greedy':
+                hypothesis = decoder(logits[0])
+            else:
+                ds_factor = spec.shape[-1] / logits.shape[0]
+                decoded, _ = decode_beams_lm([logits], decoder, beam_width=1, ds_factor=ds_factor)
+                hypothesis = decoded[0]['text']
 
             hypotheses.append(hypothesis)
             references.append(reference)

@@ -12,6 +12,7 @@ from lcasr.models.sconformer_xl import SCConformerXL
 from omegaconf.omegaconf import OmegaConf
 import traceback
 from lcasr.eval.utils import fetch_logits, decode_beams_lm
+from lcasr.decoding.greedy import GreedyCTCDecoder
 from lcasr.eval.wer import word_error_rate_detail
 from lcasr.utils.dataloading import (
     reset_seen_ids,
@@ -101,9 +102,12 @@ def evaluate_dev_wer(args, model, tokenizer, decoder, dev_path, device):
             reference = ' '.join(w['text'] for w in words)
 
             logits = fetch_logits(args, model, spec, -1, 0, tokenizer, use_tqdm=False)
-            ds_factor = spec.shape[-1] / logits.shape[0]
-            decoded, _ = decode_beams_lm([logits], decoder, beam_width=1, ds_factor=ds_factor)
-            hypothesis = decoded[0]['text']
+            if isinstance(decoder, GreedyCTCDecoder):
+                hypothesis = decoder(logits[0])
+            else:
+                ds_factor = spec.shape[-1] / logits.shape[0]
+                decoded, _ = decode_beams_lm([logits], decoder, beam_width=1, ds_factor=ds_factor)
+                hypothesis = decoded[0]['text']
 
             hypotheses.append(hypothesis)
             references.append(reference)
@@ -150,7 +154,10 @@ def train(
     model_dtype = next(model.parameters()).dtype
     ctc_loss_fn = torch.nn.CTCLoss(
         blank=model.decoder.num_classes-1,
-        reduction='sum',
+        # 実験⑫: 渡辺さんのfinetune_xlsr53_ainu notebookは'mean'を使う。既存の
+        # lr/clip設定は'sum'前提で調整済みなので、'mean'に切り替える場合は
+        # configのoptimizer.lrも合わせて見直すこと(ainu_wav2vec2_hftok_*.yaml参照)。
+        reduction=args.config['training'].get('ctc_loss_reduction', 'sum'),
         zero_infinity=args.config['training'].get('ctc_zero_infinity', True),
     )
 
@@ -169,10 +176,17 @@ def train(
     dev_eval_enabled = dev_path is not None and os.path.exists(dev_path)
     if dev_path is not None and not dev_eval_enabled:
         print(f'WARNING: dev_path={dev_path} が見つかりません。dev評価/ベストチェックポイント保存をスキップします。')
+    # 実験⑫: decoding.method: greedy なら渡辺さんのnotebookと同じargmax
+    # greedyデコード(既存のGreedyCTCDecoder、lcasr/decoding/greedy.py)を使う。
+    # 既定(未指定)はpyctcdecode beam_width=1(既存挙動を変えない)。
+    decoding_method = args.config.get('decoding', {}).get('method', 'pyctcdecode')
     dev_decoder, best_dev_wer, best_dev_dir, dev_eval_log_path = None, float('inf'), None, None
     if dev_eval_enabled:
-        dev_vocab = [tokenizer.id_to_piece(i) for i in range(tokenizer.get_piece_size())] + ['']
-        dev_decoder = build_ctcdecoder(dev_vocab, kenlm_model_path=None, alpha=None, beta=None)
+        if decoding_method == 'greedy':
+            dev_decoder = GreedyCTCDecoder(tokenizer=tokenizer, blank_id=model.decoder.num_classes-1)
+        else:
+            dev_vocab = [tokenizer.id_to_piece(i) for i in range(tokenizer.get_piece_size())] + ['']
+            dev_decoder = build_ctcdecoder(dev_vocab, kenlm_model_path=None, alpha=None, beta=None)
         best_dev_dir = os.path.join(args.config['checkpointing']['dir'], 'best_dev')
         os.makedirs(best_dev_dir, exist_ok=True)
         dev_eval_log_path = os.path.join(best_dev_dir, 'dev_eval_log.jsonl')

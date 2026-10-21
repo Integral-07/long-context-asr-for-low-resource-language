@@ -201,6 +201,12 @@ def train_tokenizer(
 def load_tokenizer(
         tokenizer_path:str = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../artifacts/tokenizer.model') # relative path to tokenizer
     ):
+    # 実験⑫: tokenizer_pathが`.model`ファイルでなければHF Wav2Vec2CTCTokenizer
+    # (vocab.json等が入ったディレクトリ、scripts/train_ainu_hf_tokenizer.py が出力する形式)
+    # とみなし、spm互換アダプタ経由で読み込む。既存のspm呼び出し元は変更不要。
+    if not tokenizer_path.endswith('.model'):
+        from lcasr.utils.hf_tokenizer_adapter import HFTokenizerAdapter
+        return HFTokenizerAdapter.from_pretrained(tokenizer_path)
     return spm.SentencePieceProcessor(model_file=tokenizer_path)
 
 

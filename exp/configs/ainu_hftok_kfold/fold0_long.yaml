@@ -1,0 +1,65 @@
+# 実験⑫ fold0 (条件B, 長文脈)。テンプレートはexp/configs/ainu_wav2vec2_hftok_long.yaml。
+# fold0_short.yamlと同じ理由で手動で書き起こした(生成スクリプトは未使用)。
+model_class: 'Wav2Vec2CTCLongContext'
+
+model:
+  base_model: 'karolnowakowski/wav2vec2-large-xlsr-53-pretrain-ain'
+  decoder_norm: true
+  self_conditioning: false
+  attn_implementation: 'sdpa'
+  use_rotary: false
+  subsampling_factor: 1
+  text_hop_length: 320
+
+optimizer:
+  name: 'adamw'
+  args:
+    lr: 1e-4
+
+scheduler:
+  warmup_steps: 200
+
+audio_chunking:
+  size: 256
+  overlap: 0
+
+sequence_scheduler:
+  increase_every: 200
+  stop_after: 999999
+  start_after: 0
+  max_sequence_length: 8192
+  increase_by_multiplier: 2
+  batch_size_multiplier: 0.5
+  interpolate_rotary: false
+
+decoding:
+  method: greedy
+
+wandb:
+  use: false
+  project_name: "ainu_hftok_kfold_fold0_long"
+  name: "ainu-hftok-kfold-fold0-long"
+  id: ""
+  update_config_with_wandb_id: false
+
+checkpointing:
+  dir: /home/t23cs033/long-context-asr/checkpoints/ainu_hftok_kfold/fold0_long
+  save_every_n_steps: 150
+
+data:
+  path: /home/t23cs033/long-context-asr/data/ainu_wav2vec2_kfold_collections/fold0/train_mapping.json
+  dev_path: /home/t23cs033/long-context-asr/data/ainu_wav2vec2_kfold_collections/fold0/dev_mapping.json
+
+training:
+  tokenizer_path: /home/t23cs033/long-context-asr/lcasr/artifacts/ainu_hftok_kfold/fold0
+  ctc_loss_reduction: mean
+  start_spec_augment_after_n_epochs: -1
+  max_epochs: 30
+  batch_size: 4
+  backprop_every: 1
+  backwards_every: 1
+  max_seq_len: 0
+  clip_value: 0.8
+  intermediate_loss_weighting: 0.0
+  random_seed: 552268
+  dtype: bfloat16

@@ -1,0 +1,57 @@
+# 実験⑫ fold0 (条件A, 短文脈)。テンプレートはexp/configs/ainu_wav2vec2_hftok_short.yaml。
+# generate_kfold_configs_wav2vec2.py は tokenizer_path に常に /tokenizer.model を
+# 付与する前提のため、HF形式(ディレクトリ)のトークナイザとは噛み合わない。
+# fold0のみの検証なので、このファイルは手動で書き起こした(生成スクリプトは未使用)。
+model_class: 'Wav2Vec2CTCLongContext'
+
+model:
+  base_model: 'karolnowakowski/wav2vec2-large-xlsr-53-pretrain-ain'
+  decoder_norm: true
+  self_conditioning: false
+  attn_implementation: 'sdpa'
+  subsampling_factor: 1
+  text_hop_length: 320
+
+optimizer:
+  name: 'adamw'
+  args:
+    lr: 1e-4
+
+scheduler:
+  warmup_steps: 200
+
+audio_chunking:
+  size: 1536
+  overlap: 0
+
+decoding:
+  method: greedy
+
+wandb:
+  use: false
+  project_name: "ainu_hftok_kfold_fold0_short"
+  name: "ainu-hftok-kfold-fold0-short"
+  id: ""
+  update_config_with_wandb_id: false
+
+checkpointing:
+  dir: /home/t23cs033/long-context-asr/checkpoints/ainu_hftok_kfold/fold0_short
+  save_every_n_steps: 2000
+
+data:
+  path: /home/t23cs033/long-context-asr/data/ainu_wav2vec2_kfold_utterances/fold0/train_mapping.json
+  dev_path: /home/t23cs033/long-context-asr/data/ainu_wav2vec2_kfold_utterances/fold0/dev_mapping.json
+
+training:
+  tokenizer_path: /home/t23cs033/long-context-asr/lcasr/artifacts/ainu_hftok_kfold/fold0
+  ctc_loss_reduction: mean
+  start_spec_augment_after_n_epochs: -1
+  max_epochs: 30
+  batch_size: 8
+  backprop_every: 1
+  backwards_every: 1
+  max_seq_len: 0
+  clip_value: 0.8
+  intermediate_loss_weighting: 0.0
+  random_seed: 552268
+  dtype: bfloat16
