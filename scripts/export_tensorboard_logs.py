@@ -36,25 +36,34 @@ from torch.utils.tensorboard import SummaryWriter
 def export_run(source_dir: Path, run_name: str, logdir: Path):
     writer = SummaryWriter(log_dir=str(logdir / run_name))
 
+    # global_stepには'epoch'ではなく'step'(cur_podcast、recording単位の累積カウンタ、
+    # exp/train.py)を使う。条件B(長文脈)はsequence_schedulerによりepochあたりの
+    # ステップ数が条件A(短文脈)の約1/48しかないため、epoch数を横軸にすると
+    # 全く異なる学習量を同じ目盛りで比較してしまい誤解を招く。
     dev_eval_path = source_dir / f'{run_name}_dev_eval_log.jsonl'
     with open(dev_eval_path, encoding='utf-8') as f:
         for line in f:
             row = json.loads(line)
-            writer.add_scalar('dev_wer', row['dev_wer'], global_step=row['epoch'])
+            writer.add_scalar('dev_wer', row['dev_wer'], global_step=row['step'])
 
     diagnostics_path = source_dir / f'{run_name}_diagnostics.jsonl'
     if diagnostics_path.exists():
         # diagnostics.jsonlはstep単位(1 epoch内に多数行)なので、epoch平均に
-        # 落としてからdev_werと同じx軸(epoch)で比較できるようにする。
+        # 落とす。x軸はそのepoch内で観測された最大step(=epoch終了時点の
+        # 累積step)を使い、dev_werのstep軸と同じスケールで比較できるようにする。
         sums: dict[int, float] = defaultdict(float)
         counts: dict[int, int] = defaultdict(int)
+        last_step: dict[int, int] = {}
         with open(diagnostics_path, encoding='utf-8') as f:
             for line in f:
                 row = json.loads(line)
                 sums[row['epoch']] += row['loss']
                 counts[row['epoch']] += 1
+                last_step[row['epoch']] = max(last_step.get(row['epoch'], 0), row['step'])
         for epoch in sorted(sums):
-            writer.add_scalar('train_loss_epoch_mean', sums[epoch] / counts[epoch], global_step=epoch)
+            writer.add_scalar(
+                'train_loss_epoch_mean', sums[epoch] / counts[epoch], global_step=last_step[epoch]
+            )
 
     writer.close()
     print(f'wrote {logdir / run_name}')
