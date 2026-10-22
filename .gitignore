@@ -18,3 +18,4 @@ symphony/.env
 .DS_Store
 
 !eval/synthetic_in_context_dataset/**/*.wav
+PROGRESS_LOG.md
