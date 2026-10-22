@@ -103,7 +103,9 @@ def evaluate_dev_wer(args, model, tokenizer, decoder, dev_path, device):
 
             logits = fetch_logits(args, model, spec, -1, 0, tokenizer, use_tqdm=False)
             if isinstance(decoder, GreedyCTCDecoder):
-                hypothesis = decoder(logits[0])
+                # fetch_logitsはnumpy配列(T,C)を返す(バッチ次元なし)。
+                # GreedyCTCDecoderはtorch.Tensorを要求するため変換する。
+                hypothesis = decoder(torch.from_numpy(logits))
             else:
                 ds_factor = spec.shape[-1] / logits.shape[0]
                 decoded, _ = decode_beams_lm([logits], decoder, beam_width=1, ds_factor=ds_factor)

@@ -77,7 +77,8 @@ def main():
 
             logits = fetch_logits(args, model, spec, args.seq_len, 0, tokenizer, use_tqdm=False)
             if args.decoder == 'greedy':
-                hypothesis = decoder(logits[0])
+                # fetch_logitsはnumpy配列(T,C)を返す(バッチ次元なし)。
+                hypothesis = decoder(torch.from_numpy(logits))
             else:
                 ds_factor = spec.shape[-1] / logits.shape[0]
                 decoded, _ = decode_beams_lm([logits], decoder, beam_width=1, ds_factor=ds_factor)
