@@ -217,7 +217,11 @@ def main():
         processing_class=processor,
     )
 
-    trainer.train()
+    existing_ckpts = sorted(output_dir.glob('checkpoint-*'))
+    if existing_ckpts:
+        print(f'resuming from {existing_ckpts[-1]}')
+
+    trainer.train(resume_from_checkpoint=bool(existing_ckpts))
     trainer.save_model(str(output_dir))
     processor.save_pretrained(str(output_dir))
     print(f'Saved best model to {output_dir}')
