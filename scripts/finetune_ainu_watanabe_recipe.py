@@ -175,7 +175,9 @@ def main():
     use_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
     training_args = TrainingArguments(
         output_dir=str(output_dir),
-        group_by_length=True,
+        # notebookのgroup_by_length=Trueに相当(transformers 5.x API、
+        # scripts/finetune_wav2vec2_ainu.pyで確認済みの対応)
+        train_sampling_strategy='group_by_length',
         length_column_name='length',
         per_device_train_batch_size=args.per_device_batch_size,
         per_device_eval_batch_size=args.per_device_batch_size,
