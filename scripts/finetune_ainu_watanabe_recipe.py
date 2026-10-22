@@ -108,7 +108,11 @@ def main():
     parser.add_argument('--save-steps', type=int, default=100)
     parser.add_argument('--logging-steps', type=int, default=20)
     parser.add_argument('--max-duration-seconds', type=float, default=180.0,
-                        help='notebook cell 13のMAX_INPUT_LEN(180秒)相当')
+                        help='train/dev用。notebook cell 13のMAX_INPUT_LEN(180秒)相当')
+    parser.add_argument('--test-max-duration-seconds', type=float, default=30.0,
+                        help='最終test評価専用のフィルタ。実験①(31.47%)・実験②③と同じ'
+                             '「30秒以下209件」に揃えるためtrain/devとは別に指定する'
+                             '(RESULT.mdの「限界」節に記載の通り、219件と209件は別の数値になる)')
     parser.add_argument('--max-train-records', type=int, default=None, help='スモークテスト用')
     parser.add_argument('--max-eval-records', type=int, default=None, help='スモークテスト用')
     args = parser.parse_args()
@@ -134,9 +138,11 @@ def main():
     if args.max_duration_seconds:
         train_records, n_dropped_train = filter_by_duration(train_records, args.max_duration_seconds)
         dev_records, n_dropped_dev = filter_by_duration(dev_records, args.max_duration_seconds)
-        test_records, n_dropped_test = filter_by_duration(test_records, args.max_duration_seconds)
         print(f'duration filter (<= {args.max_duration_seconds}s): '
-              f'dropped {n_dropped_train} train, {n_dropped_dev} dev, {n_dropped_test} test')
+              f'dropped {n_dropped_train} train, {n_dropped_dev} dev')
+    if args.test_max_duration_seconds:
+        test_records, n_dropped_test = filter_by_duration(test_records, args.test_max_duration_seconds)
+        print(f'test duration filter (<= {args.test_max_duration_seconds}s): dropped {n_dropped_test} test')
     if args.max_train_records:
         train_records = train_records[:args.max_train_records]
     if args.max_eval_records:
