@@ -208,9 +208,10 @@ def main():
         metric_for_best_model='cer',
         greater_is_better=False,
         # notebook cell 19と同じ。export_tensorboard_logs.py等の後処理は不要で、
-        # Trainerが直接 <output_dir>/runs/ 以下にイベントファイルを書き出す。
+        # Trainerが直接 <output_dir>/runs/ 以下にイベントファイルを書き出す
+        # (このtransformersバージョンにはlogging_dir引数自体がなく、常に
+        # output_dir基準の既定パスが使われる)。
         report_to=['tensorboard'],
-        logging_dir=str(output_dir / 'runs'),
         dataloader_num_workers=2,
     )
 
