@@ -52,7 +52,7 @@ for fold in $(seq "$START_FOLD" $((N_FOLDS - 1))); do
   fi
 
   echo "--- [$fold] train + eval (max_steps=$MAX_STEPS) ---"
-  uv run --extra gpu python scripts/finetune_ainu_watanabe_recipe.py \
+  uv run --extra gpu --with tensorboard python scripts/finetune_ainu_watanabe_recipe.py \
     --data-dir "$DATA_DIR" \
     --vocab-path "$TOKENIZER_DIR/vocab.json" \
     --output-dir "$CKPT_DIR" \
