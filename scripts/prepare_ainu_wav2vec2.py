@@ -19,7 +19,8 @@ import json
 from pathlib import Path
 
 from prepare_ainu import parse_transcript
-from ainu_splits import split_for
+from ainu_splits import split_for as fixed_split_for
+from ainu_kfold_splits import split_for as kfold_split_for
 
 SPECIAL_TOKENS = ['|', '[UNK]', '[PAD]']
 
@@ -40,6 +41,13 @@ def main():
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--corpus-dir', default='ainu_corpus')
     parser.add_argument('--output-dir', required=True)
+    parser.add_argument('--fold', type=int, default=None,
+                        help='指定するとk-fold交差検証モード(ainu_kfold_splits.py)。'
+                             '0..N_FOLDS-1のfold番号をtestとして使う。省略時は固定split'
+                             '(ainu_splits.py、実験①②③と同じheld-out)。'
+                             'k-foldモードではvocab.jsonは書き出さない'
+                             '(scripts/train_ainu_hf_tokenizer.pyでfold別に別途構築すること、'
+                             'vocab leakage防止のためtokenizer学習とデータ準備を分離している)。')
     args = parser.parse_args()
 
     corpus_dir = Path(args.corpus_dir)
@@ -52,7 +60,13 @@ def main():
 
     for trans_path in sorted(transcripts_dir.glob('at*.trans.txt')):
         collection_id = trans_path.stem.replace('.trans', '')
-        split = split_for(collection_id)
+        if args.fold is not None:
+            try:
+                split = kfold_split_for(collection_id, args.fold)
+            except KeyError:
+                continue  # at33: 書き起こしが空(音声なし)、fold割り当てもない
+        else:
+            split = fixed_split_for(collection_id)
 
         for seg_id, _, text in parse_transcript(trans_path):
             wav_path = audio_dir / f'{seg_id}.wav'
@@ -73,15 +87,15 @@ def main():
     if empty_text:
         print(f'WARN: {empty_text} transcript rows had no words, skipped')
 
-    vocab = build_vocab(r['text'] for r in records['train'])
-
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    vocab_path = output_dir / 'vocab.json'
-    with open(vocab_path, 'w', encoding='utf-8') as f:
-        json.dump(vocab, f, ensure_ascii=False, indent=2)
-    print(f'vocab: {len(vocab)} tokens -> {vocab_path}')
+    if args.fold is None:
+        vocab = build_vocab(r['text'] for r in records['train'])
+        vocab_path = output_dir / 'vocab.json'
+        with open(vocab_path, 'w', encoding='utf-8') as f:
+            json.dump(vocab, f, ensure_ascii=False, indent=2)
+        print(f'vocab: {len(vocab)} tokens -> {vocab_path}')
 
     for split, recs in records.items():
         out_path = output_dir / f'{split}.json'

@@ -95,7 +95,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--data-dir', default='data/ainu_wav2vec2',
-                        help='固定split(train/dev/test.json + vocab.json)。notebook独自のランダム分割は使わない')
+                        help='train/dev/test.json(固定split、notebook独自のランダム分割は使わない)')
+    parser.add_argument('--vocab-path', default=None,
+                        help='省略時は--data-dir/vocab.json。k-fold実行時はfold別トークナイザ'
+                             '(scripts/train_ainu_hf_tokenizer.py出力、vocab leakage防止のため'
+                             'データ準備とは別ディレクトリ)を指す')
     parser.add_argument('--output-dir', required=True)
     parser.add_argument('--base-model', default='karolnowakowski/wav2vec2-large-xlsr-53-pretrain-ain')
     # 以下、notebook cell 19のTrainingArgumentsと同一の値。
@@ -122,7 +126,7 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # notebook cell 11
-    vocab_path = data_dir / 'vocab.json'
+    vocab_path = Path(args.vocab_path) if args.vocab_path else data_dir / 'vocab.json'
     tokenizer = Wav2Vec2CTCTokenizer(
         str(vocab_path), unk_token='[UNK]', pad_token='[PAD]', word_delimiter_token='|')
     feature_extractor = Wav2Vec2FeatureExtractor(
@@ -203,7 +207,10 @@ def main():
         load_best_model_at_end=True,
         metric_for_best_model='cer',
         greater_is_better=False,
-        report_to=[],
+        # notebook cell 19と同じ。export_tensorboard_logs.py等の後処理は不要で、
+        # Trainerが直接 <output_dir>/runs/ 以下にイベントファイルを書き出す。
+        report_to=['tensorboard'],
+        logging_dir=str(output_dir / 'runs'),
         dataloader_num_workers=2,
     )
 
@@ -227,11 +234,25 @@ def main():
     print(f'Saved best model to {output_dir}')
 
     # 既存の固定テストセットで最終評価(他実験と比較可能な数値を出す)。
+    # trainer.predict()を使い、集計値だけでなく発話単位の予測文も保存する
+    # (eval_ainu_lcasr.pyのresults形式と揃え、k-fold実行時にfold間でpoolできるようにする)。
     test_dataset = AinuCTCDataset(test_records, processor)
-    test_metrics = trainer.evaluate(eval_dataset=test_dataset, metric_key_prefix='test')
-    print('test metrics:', test_metrics)
-    with open(output_dir / 'test_metrics.json', 'w', encoding='utf-8') as f:
-        json.dump(test_metrics, f, ensure_ascii=False, indent=2)
+    output = trainer.predict(test_dataset, metric_key_prefix='test')
+    print('test metrics:', output.metrics)
+
+    pred_ids = np.argmax(output.predictions, axis=-1)
+    label_ids = output.label_ids.copy()
+    label_ids[label_ids == -100] = tokenizer.pad_token_id
+    pred_strs = processor.batch_decode(pred_ids)
+    label_strs = processor.batch_decode(label_ids, group_tokens=False)
+
+    results = [
+        {'id': rec['id'], 'reference': ref, 'prediction': pred}
+        for rec, ref, pred in zip(test_records, label_strs, pred_strs)
+    ]
+    with open(output_dir / 'test_predictions.json', 'w', encoding='utf-8') as f:
+        json.dump({**output.metrics, 'results': results}, f, ensure_ascii=False, indent=2)
+    print(f'Saved test predictions to {output_dir / "test_predictions.json"}')
 
 
 if __name__ == '__main__':
