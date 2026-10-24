@@ -115,12 +115,20 @@ class AinuLongContextCTCDataset(Dataset):
         chunks = []
         for coll_idx, rec in enumerate(self.collections):
             duration = rec['duration']
+            words = self._words_for(coll_idx)
             n_chunks = max(1, math.ceil(duration / length))
             for c in range(n_chunks):
                 start = c * length
                 end = min(start + length, duration)
                 if end - start < 1.0 and c > 0:
                     continue  # 末尾の1秒未満の余りはスキップ(前チャンクに含まれる範囲とほぼ同じ)
+                # チャンク境界が単語境界とずれて1語も完全に収まらない場合、
+                # labelsが空になりCTCLoss/model.forwardがクラッシュする
+                # (labels.max()がnumel()==0のテンソルで失敗する)。そのような
+                # チャンクはスキップする(前後のチャンクが実質的にカバーするため、
+                # 情報は失われない)。
+                if not any(w['start'] >= start and w['end'] <= end for w in words):
+                    continue
                 chunks.append((coll_idx, start, end))
         self._chunk_cache_key = key
         self._chunk_cache = chunks
